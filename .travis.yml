@@ -1,4 +1,4 @@
-dist: xeniel
+dist: xenial
 language: go
 go:
   - 1.9
