@@ -25,12 +25,11 @@ before_script:
       echo; git status -s; git --no-pager diff; echo; false;
     fi
 script:
-  # don't run acceptance tests for anything other then merges to master - launching intsances and stuff is pricy!
+  # always run tests for every push
+  - make test;
+  # don't run acceptance tests for anything other then master branch updates - launching instances and stuff is pricy!
   - if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^master$ ]]; then
       make testacc;
-    fi
-  - if [[ $TRAVIS_PULL_REQUEST == "true" ]]; then
-      make test;
     fi
 notifications:
   webhooks:
