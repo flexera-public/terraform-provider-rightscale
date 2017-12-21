@@ -1,0 +1,40 @@
+dist: xeniel
+language: go
+go:
+  - 1.9
+git:
+  depth: 100000 # will need to find the most recent tag for pkg.VERSION
+cache:
+  directories:
+    - $GOPATH/pkg
+    - .autoconf
+    - vendor
+env:
+  global:
+    - ROOT_DIR=$PWD
+    - NAMESPACE="travis-$TRAVIS_BUILD_ID-`date -u '+%Y-%m-%d'`"
+before_install:
+  - mkdir -p tmp
+  - curl -s https://raw.githubusercontent.com/rightscale/ci/v1/travis-setup.sh > tmp/travis-setup.sh && DOCKER=false source tmp/travis-setup.sh
+  - curl -o tmp/dep https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64 && chmod +x tmp/dep && mv tmp/dep /usr/local/bin/
+before_script:
+  # try `dep ensure` multiple times -- can fail intermittently when fetching
+  - travis_retry make depensure
+  - if [ "`git status -s | wc -l`" -gt "0" ]; then
+      echo "[ERROR] files changed, dirtying workspace; verify that committed files are up to date:";
+      echo; git status -s; git --no-pager diff; echo; false;
+    fi
+script:
+  # don't run acceptance tests for anything other then merges to master - launching intsances and stuff is pricy!
+  - if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^master$ ]]; then
+      make testacc;
+    else
+      make test;
+    fi
+notifications:
+  webhooks:
+    urls:
+      - https://leeroy.test.rightscale.com:10443/travis
+      - https://leeroy-test.test.rightscale.com:10443/travis
+    on_start: always
+
