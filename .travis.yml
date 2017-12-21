@@ -28,7 +28,8 @@ script:
   # don't run acceptance tests for anything other then merges to master - launching intsances and stuff is pricy!
   - if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^master$ ]]; then
       make testacc;
-    else
+    fi
+  - if [[ $TRAVIS_PULL_REQUEST == "true" ]]; then
       make test;
     fi
 notifications:
