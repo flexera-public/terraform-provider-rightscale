@@ -27,8 +27,8 @@ before_script:
 script:
   # always run tests for every push
   - make test;
-  # don't run acceptance tests for anything other then master branch updates - launching instances and stuff is pricy!
-  - if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^master$ ]]; then
+  # don't run acceptance tests for anything other then actual pull requests - launching instances and stuff is pricy!
+  - if [[ $TRAVIS_PULL_REQUEST == "true" ]]; then
       make testacc;
     fi
 notifications:
