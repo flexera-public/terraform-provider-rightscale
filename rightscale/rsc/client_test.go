@@ -16,8 +16,8 @@ import (
 //
 // The tests use the following environment variables:
 //
-//     * RS_API_TOKEN is the API token used to auth API requests made to RightScale.
-//     * RS_PROJECT_ID is the RightScale project used to run the tests.
+//     * RIGHTSCALE_API_TOKEN is the API token used to auth API requests made to RightScale.
+//     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
 func TestAuthenticate(t *testing.T) {
@@ -183,17 +183,17 @@ func TestDelete(t *testing.T) {
 }
 
 func validToken(t *testing.T) string {
-	tok := os.Getenv("RS_API_TOKEN")
+	tok := os.Getenv("RIGHTSCALE_API_TOKEN")
 	if tok == "" {
-		t.Skip("RS_API_TOKEN environment variable not defined, skipping authentication test")
+		t.Skip("RIGHTSCALE_API_TOKEN environment variable not defined, skipping authentication test")
 	}
 	return tok
 }
 
 func validProjectID(t *testing.T) int {
-	pid := os.Getenv("RS_PROJECT_ID")
+	pid := os.Getenv("RIGHTSCALE_PROJECT_ID")
 	if pid == "" {
-		t.Skip("RS_PROJECT_ID environment variable not defined")
+		t.Skip("RIGHTSCALE_PROJECT_ID environment variable not defined")
 	}
 	projectID, err := strconv.Atoi(pid)
 	if err != nil {

@@ -60,27 +60,27 @@ func getCMClient() *cm15.API {
 	return &cm15.API{API: c.API()}
 }
 
-// testAccPreCheck ensures at least one of the project env variables is set.
+// getTestProjectFromEnv returns the project ID environment variable.
 func getTestProjectFromEnv() string {
 	return envSearch(envVars["project"])
 }
 
-// testAccPreCheck ensures at least one of the credentials env variables is set.
+// getTestCredsFromEnv returns the API token environment variable.
 func getTestCredsFromEnv() string {
 	return envSearch(envVars["cred"])
 }
 
-// testAccPreCheck ensures at least one of the credentials env variables is set.
+// getTestCloudFromEnv returns the cloud href environment variable.
 func getTestCloudFromEnv() string {
 	return envSearch(envVars["cloud"])
 }
 
-// testAccPreCheck ensures at least one of the credentials env variables is set.
+// getTestInstanceTypeFromEnv returns the instance type href environment variable.
 func getTestInstanceTypeFromEnv() string {
 	return envSearch(envVars["instanceType"])
 }
 
-// testAccPreCheck ensures at least one of the credentials env variables is set.
+// getTestImageFromEnv returns the image href environment variable.
 func getTestImageFromEnv() string {
 	return envSearch(envVars["image"])
 }

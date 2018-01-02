@@ -21,7 +21,7 @@ func TestAccRightScaleCMDeployment_basic(t *testing.T) {
 	t.Parallel()
 
 	var (
-		deploymentName = "terraform-test-" + acctest.RandString(10)
+		deploymentName = "terraform-test-" + testString + acctest.RandString(10)
 		depl           cm15.Deployment
 	)
 	resource.Test(t, resource.TestCase{
@@ -45,7 +45,7 @@ func TestAccRightScaleCMDeployment_locked(t *testing.T) {
 	t.Parallel()
 
 	var (
-		deploymentName = "terraform-test-" + acctest.RandString(10)
+		deploymentName = "terraform-test-" + testString + acctest.RandString(10)
 		depl           cm15.Deployment
 	)
 	resource.Test(t, resource.TestCase{
