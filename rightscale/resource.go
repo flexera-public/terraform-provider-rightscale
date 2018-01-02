@@ -97,3 +97,33 @@ func locator(d *schema.ResourceData) (*rsc.Locator, error) {
 	}
 	return &rsc.Locator{Namespace: parts[0], Href: parts[1]}, nil
 }
+
+// updateLock is a helper function that takes care of locking or unlocking the
+// resource according to the value of the "locked" resource data field.
+func updateLock(d *schema.ResourceData, client rsc.Client, resourceType string) error {
+	loc, err := locator(d)
+	if err != nil {
+		return err
+	}
+	lock := d.Get("locked").(bool)
+	op := "lock"
+	if !lock {
+		op = "unlock"
+	}
+	source := fmt.Sprintf(`
+define main() do
+	@res = rs_cm.%s.get(href: %q)
+	@res.%s()
+end
+	`, resourceType, loc.Href, op)
+
+	process, err := client.RunProcess(source, nil)
+
+	if err != nil {
+		return err
+	}
+	if process.Error != nil {
+		return fmt.Errorf("operation failed: %s", process.Error.Error())
+	}
+	return nil
+}

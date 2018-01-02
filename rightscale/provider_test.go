@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/rightscale/rsc/cm15"
@@ -13,17 +14,22 @@ import (
 
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
+var testString string
 
-const (
-	credEnvVar     = "RIGHTSCALE_API_TOKEN"
-	projectEnvVars = "RIGHTSCALE_PROJECT_ID"
-)
+var envVars map[string]string = map[string]string{
+	"cred":         "RIGHTSCALE_API_TOKEN",
+	"project":      "RIGHTSCALE_PROJECT_ID",
+	"cloud":        "RIGHTSCALE_CLOUD_HREF",
+	"instanceType": "RIGHTSCALE_INSTANCE_TYPE_HREF",
+	"image":        "RIGHTSCALE_IMAGE_HREF",
+}
 
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"rightscale": testAccProvider,
 	}
+	testString = acctest.RandString(10)
 }
 
 func TestProvider(t *testing.T) {
@@ -37,12 +43,10 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := envSearch(credEnvVar); v == "" {
-		t.Fatalf("%s must be set for acceptance tests", credEnvVar)
-	}
-
-	if v := envSearch(projectEnvVars); v == "" {
-		t.Fatalf("%s must be set for acceptance tests", projectEnvVars)
+	for _, envVar := range envVars {
+		if v := envSearch(envVar); v == "" {
+			t.Fatalf("%s must be set for acceptance tests", envVar)
+		}
 	}
 }
 
@@ -58,12 +62,27 @@ func getCMClient() *cm15.API {
 
 // testAccPreCheck ensures at least one of the project env variables is set.
 func getTestProjectFromEnv() string {
-	return envSearch(projectEnvVars)
+	return envSearch(envVars["project"])
 }
 
 // testAccPreCheck ensures at least one of the credentials env variables is set.
 func getTestCredsFromEnv() string {
-	return envSearch(credEnvVar)
+	return envSearch(envVars["cred"])
+}
+
+// testAccPreCheck ensures at least one of the credentials env variables is set.
+func getTestCloudFromEnv() string {
+	return envSearch(envVars["cloud"])
+}
+
+// testAccPreCheck ensures at least one of the credentials env variables is set.
+func getTestInstanceTypeFromEnv() string {
+	return envSearch(envVars["instanceType"])
+}
+
+// testAccPreCheck ensures at least one of the credentials env variables is set.
+func getTestImageFromEnv() string {
+	return envSearch(envVars["image"])
 }
 
 func getHrefFromID(id string) string {

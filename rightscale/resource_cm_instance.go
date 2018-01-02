@@ -114,7 +114,7 @@ func resourceCMInstance() *schema.Resource {
 			},
 			"public_ip_addresses": {
 				Type:     schema.TypeList,
-				Elem:     schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"pricing_type": {
@@ -123,7 +123,7 @@ func resourceCMInstance() *schema.Resource {
 			},
 			"private_ip_addresses": {
 				Type:     schema.TypeList,
-				Elem:     schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"resource_uid": {
@@ -298,8 +298,8 @@ func resourceCMInstanceCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if mustLock {
-		if err := updateLock(d, client); err != nil {
-			// Attempt to delete previously created deployment, ignore errors
+		if err := updateLock(d, client, "instances"); err != nil {
+			// Attempt to delete previously created instance, ignore errors
 			client.Delete(res.Locator)
 			return err
 		}
@@ -322,21 +322,43 @@ func resourceCMInstanceUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// update lock
-	if err := updateLock(d, client); err != nil {
+	if err := updateLock(d, client, "instances"); err != nil {
 		return handleRSCError(d, err)
 	}
 	d.SetPartial("locked")
 
 	// then the other fields
-	if err := client.Update(loc, instanceWriteFields(d)); err != nil {
-		return handleRSCError(d, err)
+	// Skip updating instance if only lock status is changing
+	for updateFields := range instanceUpdateFields(d) {
+		if d.HasChange(updateFields) {
+			if err := client.Update(loc, instanceUpdateFields(d)); err != nil {
+				return handleRSCError(d, err)
+			}
+			break
+		}
 	}
 
 	d.Partial(false)
 	return nil
 }
+
+func instanceUpdateFields(d *schema.ResourceData) rsc.Fields {
+	fields := rsc.Fields{}
+	for _, f := range []string{
+		"deployment_href",
+	} {
+		if v, ok := d.GetOk(f); ok {
+			fields[f] = v
+		}
+	}
+	if a, ok := d.GetOk("cloud_specific_attributes"); ok {
+		fields["cloud_specific_attributes"] = a.([]interface{})[0]
+	}
+	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
+}
+
 func instanceWriteFields(d *schema.ResourceData) rsc.Fields {
-	fields := rsc.Fields{"cloud_href": d.Get("cloud_href")}
+	fields := rsc.Fields{}
 	for _, f := range []string{
 		"associate_public_ip_address", "datacenter_href",
 		"deployment_href", "image_href", "instance_type_href",
@@ -352,5 +374,5 @@ func instanceWriteFields(d *schema.ResourceData) rsc.Fields {
 	if a, ok := d.GetOk("cloud_specific_attributes"); ok {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
-	return rsc.Fields{"instance": fields}
+	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
 }

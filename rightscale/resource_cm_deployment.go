@@ -1,8 +1,6 @@
 package rightscale
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -74,7 +72,7 @@ func resourceCMDeploymentCreate(d *schema.ResourceData, m interface{}) error {
 
 	if mustLock {
 		d.Set("locked", true)
-		if err := updateLock(d, client); err != nil {
+		if err := updateLock(d, client, "deployments"); err != nil {
 			d.SetId("")
 			d.Set("locked", false)
 			// Attempt to delete previously created deployment, ignore errors
@@ -96,7 +94,7 @@ func resourceCMDeploymentUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// update lock
-	if err := updateLock(d, client); err != nil {
+	if err := updateLock(d, client, "deployments"); err != nil {
 		return handleRSCError(d, err)
 	}
 	d.SetPartial("locked")
@@ -107,36 +105,6 @@ func resourceCMDeploymentUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Partial(false)
-	return nil
-}
-
-// updateLock is a helper function that takes care of locking or unlocking the
-// deployment according to the value of the "locked" resource data field.
-func updateLock(d *schema.ResourceData, client rsc.Client) error {
-	loc, err := locator(d)
-	if err != nil {
-		return err
-	}
-	lock := d.Get("locked").(bool)
-	op := "lock"
-	if !lock {
-		op = "unlock"
-	}
-	source := fmt.Sprintf(`
-define main() do
-	@res = rs_cm.deployments.get(href: %q)
-	@res.%s()
-end
-	`, loc.Href, op)
-
-	process, err := client.RunProcess(source, nil)
-
-	if err != nil {
-		return err
-	}
-	if process.Error != nil {
-		return fmt.Errorf("operation failed: %s", process.Error.Error())
-	}
 	return nil
 }
 

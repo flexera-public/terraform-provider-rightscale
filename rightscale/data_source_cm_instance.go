@@ -154,12 +154,12 @@ func dataSourceCMInstance() *schema.Resource {
 			},
 			"private_ip_addresses": {
 				Type:     schema.TypeList,
-				Elem:     schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"public_ip_addresses": {
 				Type:     schema.TypeList,
-				Elem:     schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"resource_uid": {
