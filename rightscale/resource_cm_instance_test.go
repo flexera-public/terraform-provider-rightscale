@@ -17,7 +17,7 @@ func TestAccRightScaleCMInstance_basic(t *testing.T) {
 	t.Parallel()
 
 	var (
-		instanceName = "test-instance-" + testString + "-" + acctest.RandString(10)
+		instanceName = "terraform-test-instance-" + testString + "-" + acctest.RandString(10)
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
@@ -42,7 +42,7 @@ func TestAccRightScaleCMInstance_userdata(t *testing.T) {
 	t.Parallel()
 
 	var (
-		instanceName = "test-instance-" + testString + "-" + acctest.RandString(10)
+		instanceName = "terraform-test-instance-" + testString + "-" + acctest.RandString(10)
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
@@ -69,7 +69,7 @@ func TestAccRightScaleCMInstance_locked(t *testing.T) {
 	t.Parallel()
 
 	var (
-		instanceName = "test-instance-" + testString + "-" + acctest.RandString(10)
+		instanceName = "terraform-test-instance-" + testString + "-" + acctest.RandString(10)
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
