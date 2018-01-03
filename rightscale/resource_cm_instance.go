@@ -306,7 +306,7 @@ func resourceCMInstanceCreate(d *schema.ResourceData, m interface{}) error {
 		d.Set("locked", true)
 	}
 
-	// set ID last so Terraform does not assume the deployment has been
+	// set ID last so Terraform does not assume the instance has been
 	// created until all operations have completed successfully.
 	d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
 	return nil
