@@ -29,7 +29,7 @@ script:
   - make test;
   # don't run acceptance tests for anything other then actual pull requests to master - launching instances and stuff is pricy!
   - if [[ ! $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^master$ ]]; then
-      make testacc;
+      travis_wait make testacc;
     fi
 notifications:
   webhooks:
