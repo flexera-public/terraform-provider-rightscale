@@ -1,3 +1,8 @@
+Alpha Pre-Release
+==================
+
+This is an early pre-release of the Terraform provider for RightScale. The provider is under development and is not yet ready for public consumption. Please [open an issue](https://github.com/rightscale/terraform-provider-rightscale/issues/new) if you are interested in contributing or evaluating.
+
 Terraform Provider
 ==================
 

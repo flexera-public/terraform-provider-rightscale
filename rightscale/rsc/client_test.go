@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/rightscale/rsc/rsapi"
 )
 
@@ -116,9 +117,9 @@ func TestCreate(t *testing.T) {
 	const (
 		namespace = "rs_cm"
 		typ       = "deployment"
-		depl      = "Terraform Provider Test Deployment"
 		deplDesc  = "Created by tests"
 	)
+	depl := "Terraform Provider Test Deployment " + acctest.RandString(4)
 	token := validToken(t)
 	project := validProjectID(t)
 	cl, err := New(token, project)
@@ -152,9 +153,9 @@ func TestDelete(t *testing.T) {
 	const (
 		namespace = "rs_cm"
 		typ       = "deployment"
-		depl      = "Terraform Provider Test Deployment"
 		deplDesc  = "Created by tests"
 	)
+	depl := "Terraform Provider Test Deployment " + acctest.RandString(4)
 	token := validToken(t)
 	project := validProjectID(t)
 	cl, err := New(token, project)
