@@ -117,7 +117,7 @@ define main() do
 end
 	`, resourceType, loc.Href, op)
 
-	process, err := client.RunProcess(source, nil, false)
+	process, err := client.RunProcess(source, nil)
 
 	if err != nil {
 		return err

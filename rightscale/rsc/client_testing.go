@@ -57,7 +57,7 @@ func (c *TestClient) Delete(l *Locator) error {
 }
 
 // RunProcess runs any preset expectation.
-func (c *TestClient) RunProcess(rcl string, parameters []*Parameter, expectsOutputs bool) (*Process, error) {
+func (c *TestClient) RunProcess(rcl string, parameters []*Parameter) (*Process, error) {
 	if e := c.Expectation("RunProcess"); e != nil {
 		return e.(func(string, []*Parameter) (*Process, error))(rcl, parameters)
 	}
