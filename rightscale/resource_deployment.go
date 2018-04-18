@@ -49,6 +49,11 @@ func resourceDeployment() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 				Computed: true,
 			},
+			"href": &schema.Schema{
+				Description: "href of deployment",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -80,7 +85,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-
+	d.Set("href", res.Locator.Href)
 	return nil
 }
 
