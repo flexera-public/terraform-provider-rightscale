@@ -2,7 +2,7 @@ package rightscale
 
 import (
 	"log"
-	"regexp"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -145,7 +145,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, m interface{}) error {
 
 	// wrap in rescue/retry if response is 422 with max ttl
 	timeout := time.After(5 * time.Minute)
-	tick := time.Tick(30 + time.Second)
+	tick := time.Tick(10 + time.Second)
 	log.Printf("[INFO] Deleting Deployment - waiting up to 5 min for objects to finish being destroyed in deployment: %s", d.Id())
 	for {
 		select {
@@ -162,9 +162,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, m interface{}) error {
 			// Search errorresponse for specific string indicating the deployment still contains objects that are still 'terminating'
 			// If error message contains 'ActionNotAllowed: This deployment cannot be deleted because it contains running servers and/or active arrays.' retry,
 			// otherwise on any other error raise and exit.
-			const runningInstances = "ActionNotAllowed: This deployment cannot be deleted because it contains running servers and/or active arrays."
-			r := regexp.MustCompile(runningInstances)
-			if r.MatchString(err.Error()) {
+			if strings.Contains(err.Error(), "ActionNotAllowed: This deployment cannot be deleted because it contains running servers and/or active arrays.") {
 				log.Printf("[INFO] Deleting Deployment - 422 from cm api - instances still active in deployment - try again later")
 			} else {
 				// Unhandled error from API that should be immediately returned eg deployment locked
