@@ -290,3 +290,42 @@ func TestOnlyPopulated(t *testing.T) {
 		t.Errorf("Result of onlyPopulated was incorrect, got: %v, expected: %v", testFields.onlyPopulated(), expectedResult)
 	}
 }
+
+func TestAnalyzeSource(t *testing.T) {
+	const (
+		invalidSource = `define main( do
+	foo
+end
+`
+		goodSourceNoReturn = `define main() do
+	bar
+end
+`
+		goodSourceWithReturn = `define main() return $out1, $out2, $out3, $suma do
+	$out1 = 156.5534
+	$out2 = "patata"
+	$out3 = 42421000
+	$suma = $out1 + $out3
+end
+`
+	)
+
+	_, err := analyzeSource(invalidSource)
+	if err == nil {
+		t.Errorf("invalid source not detected as such")
+	}
+
+	expectsOutputs, err := analyzeSource(goodSourceNoReturn)
+	if err != nil {
+		t.Errorf("good source incorrectly considered invalid (err: %s)", err)
+	} else if expectsOutputs != false {
+		t.Errorf("source without return shouldn't enable expectsOutputs")
+	}
+
+	expectsOutputs, err = analyzeSource(goodSourceWithReturn)
+	if err != nil {
+		t.Errorf("good source incorrectly considered invalid (err: %s)", err)
+	} else if expectsOutputs != true {
+		t.Errorf("source with return in the defintion should enable expectsOutputs")
+	}
+}
