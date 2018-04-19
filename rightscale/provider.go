@@ -33,6 +33,7 @@ func Provider() terraform.ResourceProvider {
 			"rightscale_cloud":             dataSourceCloud(),
 			"rightscale_credential":        dataSourceCredential(),
 			"rightscale_datacenter":        dataSourceDatacenter(),
+			"rightscale_deployment":        dataSourceDeployment(),
 			"rightscale_image":             dataSourceImage(),
 			"rightscale_instance":          dataSourceInstance(),
 			"rightscale_instance_type":     dataSourceInstanceType(),
