@@ -30,12 +30,16 @@ script:
   # Only run acceptance tests if :
   #   RIGHTSCALE_API_TOKEN is set up (encrypted variable not available from external PRs, avoids false red builds)
   #   ... and only for master / merge to master builds - launching instances and stuff is pricy!
+  # Output something every 10 minutes or Travis kills the job
+  - while sleep 9m; do echo "=====[ $SECONDS seconds still running ]====="; done &
   - |
     if [[ ! -z "$RIGHTSCALE_API_TOKEN" && $TRAVIS_BRANCH =~ ^master$ ]]; then
-      travis_wait make testacc;
+      make testacc;
     else
       echo "SKIPPING acceptance tests since RIGHTSCALE_API_TOKEN not set and/or TRAVIS_BRANCH is not master";
     fi
+  # Killing background sleep loop
+  - kill %1
 notifications:
   webhooks:
     urls:
