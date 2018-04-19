@@ -734,9 +734,9 @@ func (inFields Fields) onlyPopulated() Fields {
 // If the definition is valid, expectsOuputs boolean indicates if the defition includes the "return" keyword,
 // which indicates that output values are expected.
 func analyzeSource(source string) (expectsOutputs bool, err error) {
-	const validDefinition = "^[[:blank:]\n]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*)?do"
+	const validDefinition = "^[[:blank:]\n]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*[[:blank:]]+)?do"
 
-	r, _ := regexp.Compile(validDefinition)
+	r := regexp.MustCompile(validDefinition)
 	matched := r.FindStringSubmatch(source)
 	if err != nil {
 		return false, fmt.Errorf("error parsing rightscale_cwf_process source definition: %s", err)
@@ -746,12 +746,6 @@ func analyzeSource(source string) (expectsOutputs bool, err error) {
 		return false, fmt.Errorf("invalid rightscale_cwf_process source definition")
 	}
 
-	if matched[1] == "" {
-		expectsOutputs = false
-	} else {
-		// return present in source definition, outputs expected
-		expectsOutputs = true
-	}
-
-	return expectsOutputs, nil
+	// if return capture group matched, expectOutputs = true
+	return matched[1] != "", nil
 }
