@@ -26,11 +26,10 @@ end
 		CheckDestroy: testAccCheckCWFProcessDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				ExpectNonEmptyPlan: true, // Because of outputs
-				Config:             testAccCWFProcess_basic(src),
+				Config: testAccCWFProcess_basic(src),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCWFProcessExists("rightscale_cwf_process.foobar", &process),
-					testAccCheckCWFProcessOutput(&process, []string{"$out"}, []interface{}{float64(42)}),
+					testAccCheckCWFProcessOutput(&process, []string{"$out"}, []interface{}{string("42")}),
 					testAccCheckCWFProcessStatus(&process, "completed"),
 				),
 			},
@@ -85,7 +84,7 @@ end
 				Config: testAccCWFProcess_basic(src),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCWFProcessExists("rightscale_cwf_process.foobar", &process),
-					testAccCheckCWFProcessOutput(&process, []string{"$out"}, []interface{}{float64(42)}),
+					testAccCheckCWFProcessOutput(&process, []string{"$out"}, []interface{}{string("42")}),
 					testAccCheckCWFProcessStatus(&process, "failed"),
 					testAccCheckCWFProcessError(&process, "test error"),
 				),
