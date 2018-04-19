@@ -734,7 +734,7 @@ func (inFields Fields) onlyPopulated() Fields {
 // If the definition is valid, expectsOuputs boolean indicates if the defition includes the "return" keyword,
 // which indicates that output values are expected.
 func analyzeSource(source string) (expectsOutputs bool, err error) {
-	const validDefinition = "^[[:blank:]]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*)?do"
+	const validDefinition = "^[[:blank:]\n]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*)?do"
 
 	r, _ := regexp.Compile(validDefinition)
 	matched := r.FindStringSubmatch(source)

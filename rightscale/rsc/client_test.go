@@ -293,19 +293,21 @@ func TestOnlyPopulated(t *testing.T) {
 
 func TestAnalyzeSource(t *testing.T) {
 	const (
-		invalidSource = `define main( do
+		invalidSource = `
+define main( do
 	foo
 end
 `
-		goodSourceNoReturn = `define main() do
+		goodSourceNoReturn = `
+define main() do
 	bar
 end
 `
-		goodSourceWithReturn = `define main() return $out1, $out2, $out3, $suma do
+		goodSourceWithReturn = `
+define main() return $out1, $out2 $suma do
 	$out1 = 156.5534
-	$out2 = "patata"
-	$out3 = 42421000
-	$suma = $out1 + $out3
+	$out2 = 42421000
+	$suma = $out1 + $out2
 end
 `
 	)
