@@ -312,22 +312,25 @@ end
 `
 	)
 
-	_, err := analyzeSource(invalidSource)
-	if err == nil {
-		t.Errorf("invalid source not detected as such")
+	var sourcetests = []struct {
+		source         string
+		valid          bool
+		expectsOutputs bool
+	}{
+		{invalidSource, false, false},
+		{goodSourceNoReturn, true, false},
+		{goodSourceWithReturn, true, true},
 	}
 
-	expectsOutputs, err := analyzeSource(goodSourceNoReturn)
-	if err != nil {
-		t.Errorf("good source incorrectly considered invalid (err: %s)", err)
-	} else if expectsOutputs != false {
-		t.Errorf("source without return shouldn't enable expectsOutputs")
-	}
-
-	expectsOutputs, err = analyzeSource(goodSourceWithReturn)
-	if err != nil {
-		t.Errorf("good source incorrectly considered invalid (err: %s)", err)
-	} else if expectsOutputs != true {
-		t.Errorf("source with return in the defintion should enable expectsOutputs")
+	for _, tt := range sourcetests {
+		t.Run(tt.source, func(t *testing.T) {
+			expectsOutputs, err := analyzeSource(tt.source)
+			if (tt.valid && err != nil) || (!tt.valid && err == nil) {
+				t.Errorf("source: \n `%s` \n ...was incorrectly validated (error value was `%v`)", tt.source, err)
+			}
+			if expectsOutputs != tt.expectsOutputs {
+				t.Errorf("source: \n `%s` \n ...got incorrect expectsOutputs value: `%t` (should be `%t`)", tt.source, expectsOutputs, tt.expectsOutputs)
+			}
+		})
 	}
 }
