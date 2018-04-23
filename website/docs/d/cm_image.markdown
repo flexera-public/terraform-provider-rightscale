@@ -3,7 +3,7 @@ layout: "rightscale"
 page_title: "Rightscale: image"
 sidebar_current: "docs-rightscale-datasource-image"
 description: |-
-  Defines an image datasource to operate against. 
+  Defines an image datasource to operate against.
 ---
 
 # rightscale_image
@@ -83,7 +83,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `visibility` - Image visibility as displayed in cm platform. 
+* `visibility` - Image visibility as displayed in cm platform.
 
 * `resource_uid` - Image unique resource identifier as displayed in cm platform.
 

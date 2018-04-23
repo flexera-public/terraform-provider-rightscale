@@ -3,7 +3,7 @@ layout: "rightscale"
 page_title: "Rightscale: instance_type"
 sidebar_current: "docs-rightscale-datasource-instance-type"
 description: |-
-  Defines a instance_type datasource to operate against. 
+  Defines a instance_type datasource to operate against.
 ---
 
 # rightscale_instance_type
