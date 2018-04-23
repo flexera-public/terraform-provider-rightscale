@@ -36,6 +36,25 @@ output "process_outputs" {
 }
 ```
 
+You can also use the output of a module as a `source`, this way, you can have your library of CWF scripts stored in a module and then call the one you want to execute:
+
+```hcl
+module "lib_cwf" {
+  # Local filesystem library
+  source = "../cwf_lib"
+  # ... or Github repository:
+  # source = "github.com/org/cwf_lib"
+}
+
+resource "rightscale_cwf_process" "a_process" {
+  source = "${module.my_cwf_lib.taskX}"
+}
+
+output "process_total" {
+  value = "${rightscale_cwf_process.a_process.outputs["$total"]}"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
