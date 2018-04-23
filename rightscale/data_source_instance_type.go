@@ -8,10 +8,10 @@ import (
 // Example:
 //
 // data "rightscale_instance_type" "n1-standard" {
+//   cloud_href = ${data.rightscale_cloud.gce.id}
 //   filter {
 //     name = "n1-standard"
 //   }
-//   cloud_href = ${data.rightscale_cloud.gce.id}
 // }
 
 func dataSourceInstanceType() *schema.Resource {
@@ -40,13 +40,13 @@ func dataSourceInstanceType() *schema.Resource {
 						},
 						"description": {
 							Type:        schema.TypeString,
-							Description: "description of instance type",
+							Description: "description of instance type, uses partial match",
 							Optional:    true,
 							ForceNew:    true,
 						},
 						"resource_uid": {
 							Type:        schema.TypeString,
-							Description: "cloud id of instance type",
+							Description: "unique resource id of instance type",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -80,14 +80,6 @@ func dataSourceInstanceType() *schema.Resource {
 			"links": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeMap},
-				Computed: true,
-			},
-			"local_disks": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"local_disk_size": {
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"memory": {
