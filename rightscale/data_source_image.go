@@ -8,11 +8,12 @@ import (
 
 // Example:
 //
-// data "rightscale_image" "centos_5" {
-//   filter {
-//     name = "centos 5"
-//   }
+// data "rightscale_image" "centos_7" {
 //   cloud_href = ${data.rightscale_cloud.gce.id}
+//   filter {
+//     name = "centos 7"
+//     visibility = "public"
+//   }
 // }
 
 func dataSourceImage() *schema.Resource {
@@ -73,10 +74,11 @@ func dataSourceImage() *schema.Resource {
 						},
 						"visibility": {
 							Type:         schema.TypeString,
-							Description:  "The visibility of the Image in the cloud to filter on. Examples: private, public.",
+							Description:  "The visibility of the Image in the cloud to filter on, defaults to 'private.' Options: private, public.",
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{"machine", "machine_azure", "ramdisk", "kernel"}, false),
+							Default:      "private",
+							ValidateFunc: validation.StringInSlice([]string{"private", "public"}, false),
 						},
 					},
 				},
