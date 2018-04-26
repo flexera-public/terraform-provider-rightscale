@@ -8,50 +8,45 @@ description: |-
 
 # rightscale_cwf_process
 
-Use this resource to create, update or destroy rightscale [CloudWorkFlow processes](http://docs.rightscale.com/ss/reference/rcl/).
+Use this resource to create or destroy RightScale [CloudWorkFlow processes](http://docs.rightscale.com/ss/reference/rcl/).
+
+Creating the CWF process will run it synchronously and return the output values (if any).
+
+Destroying a CWF process will remove it from the CWF Console table of executed processes. It WON'T undo any action that it could have executed nor would stop any running process.
+
+It is NOT possible to update a CWF process.
 
 ## Example Usage
 
+This example CWF process will look for all servers whose name starts by "db-slave-" and will execute the specified RightScript on them,
+returning the number of servers that have been reached.
+
 ```hcl
-resource "rightscale_cwf_process" "a_process" {
+resource "rightscale_cwf_process" "run_executable_by_prefix" {
+
+  parameters = [
+     { "kind" = "string"
+       "value" = "db-slave-" },
+     { "kind" = "string"
+       "value" = "/api/right_scripts/1018361003" }
+     ]
+
   source = <<EOF
-define main() return $total do
-  $a = 156.5534
-  $b = 42421000
-  $total = $a + $b
-  end
+define main($server_prefix, $rightscript_href) return $servers_reached do
+  @servers = rs_cm.servers.get(filter: ["name==" + $server_prefix])
+  @servers.current_instance().run_executable(right_script_href: $rightscript_href)
+  $servers_reached = size(@servers)
+end
 EOF
+
 }
 
-output "process_status" {
-  value = "${rightscale_cwf_process.a_process.status}"
+output "cwf_status" {
+  value = "${rightscale_cwf_process.run_executable_by_prefix.status}"
 }
 
-output "process_total" {
-  value = "${rightscale_cwf_process.a_process.outputs["$total"]}"
-}
-
-output "process_outputs" {
-  value = "${rightscale_cwf_process.a_process.outputs}"
-}
-```
-
-You can also use the output of a module as a `source`, this way, you can have your library of CWF scripts stored in a module and then call the one you want to execute:
-
-```hcl
-module "lib_cwf" {
-  # Local filesystem library
-  source = "../cwf_lib"
-  # ... or Github repository:
-  # source = "github.com/org/cwf_lib"
-}
-
-resource "rightscale_cwf_process" "a_process" {
-  source = "${module.my_cwf_lib.taskX}"
-}
-
-output "process_total" {
-  value = "${rightscale_cwf_process.a_process.outputs["$total"]}"
+output "cwf_servers_updated" {
+  value = "${rightscale_cwf_process.run_executable_by_prefix.outputs["$servers_reached"]}"
 }
 ```
 
@@ -59,7 +54,24 @@ output "process_total" {
 
 The following arguments are supported:
 
-* `source` - (Required) Source code to be executed, written in [RCL (RightScale CloudWorkFlow Language)](http://docs.rightscale.com/ss/reference/rcl/v2/index.html).
+* `source` - (Required) Source code to be executed, written in [RCL (RightScale CloudWorkFlow Language)](http://docs.rightscale.com/ss/reference/rcl/v2/index.html). The function should always be called main. Example:
+```hcl
+  source = <<EOF
+define main($a, $b) return $result do
+  $result = $a + $b
+  end
+EOF
+```
+
+* `parameters` - Parameters for the RCL function. It consists of an array of values corresponding to the values being passed to the function defined in the "source" field in order of declaration. The values are defined as string maps with the "kind" and "value" keys. "kind" contains the type of the value being passed, could be one of "array", "boolean", "collection", "datetime", "declaration", "null", "number", "object", "string". The "value" key contains the value. For example:
+```hcl
+  parameters = [
+     { "kind" = "string"
+       "value" = "db-slave-" },
+     { "kind" = "number"
+       "value" = "42" }
+     ]
+```
 
 ## Attributes Reference
 
@@ -69,4 +81,4 @@ The following attributes are exported:
 
 * `error` - Process execution error if any.
 
-* `outputs` - Process outputs if any. This is a TypeMap, one particular output can be accessed via `outputs["$var"]` (see example above)
+* `outputs` - Process outputs if any. This is a TypeMap, one particular output can be accessed via `outputs["$var"]`, see "Example Usage" section.
