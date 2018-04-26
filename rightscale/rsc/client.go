@@ -489,6 +489,7 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 
 	timeout := time.NewTimer(1 * time.Hour)
 	ticker := time.NewTicker(2 * time.Second)
+	expectsOutputsTimeout := 5
 	defer ticker.Stop()
 	defer timeout.Stop()
 
@@ -520,6 +521,11 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 
 				// Keep waiting if outputs aren't yet present
 				if expectsOutputs && len(process.Outputs) == 0 {
+					expectsOutputsTimeout--
+					if expectsOutputsTimeout == 0 {
+						err = fmt.Errorf("no Outputs received from your CWF process, check your return clause")
+						return nil, err
+					}
 					continue
 				}
 
