@@ -1,6 +1,8 @@
 package rightscale
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
@@ -31,6 +33,14 @@ func resourceServer() *schema.Resource {
 				Optional:    true,
 				Elem:        resourceInstance(),
 			},
+			"inputs": &schema.Schema{
+				Description: "Inputs associated with an instance when incarnated from a server or server array - should be rendered via template provider - see docs",
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				// Uncomment below then they start supporting this on TypeSet
+				//ValidateFunc: validation.StringMatch(regexp.MustCompile("\\w+=\\w+:\\w+"), "values must be in format of 'KEY=type:value'"),
+			},
 			"name": &schema.Schema{
 				Description: "name of server",
 				Type:        schema.TypeString,
@@ -54,10 +64,19 @@ func resourceServer() *schema.Resource {
 
 func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 	fields := rsc.Fields{}
+	// construct 'instance' hash so we end up with a server WITH a running instance
 	if i, ok := d.GetOk("instance"); ok {
 		fields["instance"] = i.([]interface{})[0].(map[string]interface{})
 		if fields["instance"].(map[string]interface{})["associate_public_ip_address"].(bool) == false {
 			delete(fields["instance"].(map[string]interface{}), "associate_public_ip_address")
+		}
+	}
+	// if inputs are defined in resource, add those to instance field as proper format
+	if _, ok := d.GetOk("inputs"); ok {
+		if r, ok := cmInputs(d); ok != nil {
+			log.Printf("[ERROR]: %v", ok)
+		} else {
+			fields["instance"].(map[string]interface{})["inputs"] = r["inputs"]
 		}
 	}
 	if o, ok := d.GetOk("optimized"); ok {

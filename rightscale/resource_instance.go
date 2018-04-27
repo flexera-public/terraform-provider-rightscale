@@ -85,7 +85,6 @@ func resourceInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-
 			"ssh_key_href": &schema.Schema{
 				Description: "The ID of the SSH key to use",
 				Type:        schema.TypeString,

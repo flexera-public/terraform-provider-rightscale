@@ -159,9 +159,9 @@
 
 [[projects]]
   name = "github.com/hashicorp/terraform"
-  packages = ["config","config/configschema","config/hcl2shim","config/module","dag","flatmap","helper/acctest","helper/config","helper/hashcode","helper/hilmapstructure","helper/logging","helper/resource","helper/schema","helper/structure","helper/validation","moduledeps","plugin","plugin/discovery","registry/regsrc","registry/response","svchost","svchost/auth","svchost/disco","terraform","tfdiags","version"]
-  revision = "a42fdb08a43c7fabb8898fe8c286b793bbaa4835"
-  version = "v0.11.1"
+  packages = ["config","config/configschema","config/hcl2shim","config/module","dag","flatmap","helper/acctest","helper/config","helper/hashcode","helper/hilmapstructure","helper/logging","helper/resource","helper/schema","helper/structure","helper/validation","httpclient","moduledeps","plugin","plugin/discovery","registry","registry/regsrc","registry/response","svchost","svchost/auth","svchost/disco","terraform","tfdiags","version"]
+  revision = "41e50bd32a8825a84535e353c3674af8ce799161"
+  version = "v0.11.7"
 
 [[projects]]
   branch = "master"
@@ -251,12 +251,6 @@
   name = "github.com/rightscale/rsc"
   packages = ["cm15","cmd","httpclient","log","metadata","recording","rsapi"]
   revision = "9a282a41ddf12aa32c937555297ada4ae8327922"
-
-[[projects]]
-  name = "github.com/satori/go.uuid"
-  packages = ["."]
-  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
-  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/ulikunitz/xz"
