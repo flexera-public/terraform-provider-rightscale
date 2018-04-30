@@ -2,6 +2,7 @@ package rightscale
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -73,7 +74,6 @@ define main() return $out do
     raise "test error"
 end
 `
-	var process rsc.Process
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -81,13 +81,8 @@ end
 		CheckDestroy: testAccCheckCWFProcessDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCWFProcess_basic(src),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCWFProcessExists("rightscale_cwf_process.foobar", &process),
-					testAccCheckCWFProcessOutput(&process, []string{"$out"}, []interface{}{string("42")}),
-					testAccCheckCWFProcessStatus(&process, "failed"),
-					testAccCheckCWFProcessError(&process, "test error"),
-				),
+				Config:      testAccCWFProcess_basic(src),
+				ExpectError: regexp.MustCompile("test error"),
 			},
 		},
 	})

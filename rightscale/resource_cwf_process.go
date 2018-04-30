@@ -97,10 +97,10 @@ func resourceCWFProcessCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("outputs", proc.Outputs)
 	d.Set("status", proc.Status)
+	d.SetId(proc.Href)
 	if proc.Error != nil {
 		return fmt.Errorf(proc.Error.Error())
 	}
-	d.SetId(proc.Href)
 	return nil
 }
 
