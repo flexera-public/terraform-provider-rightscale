@@ -10,15 +10,15 @@ description: |-
 
 Use this resource to create or destroy RightScale [CloudWorkFlow processes](http://docs.rightscale.com/ss/reference/rcl/).
 
-Creating the CWF process runs it synchronously and returns the output values (if any). If the CWF process fails, the Terraform script will fail too.
+Creating the CWF process runs it synchronously and returns the output values (if any). If the CWF process fails, the Terraform script fails too.
 
-Destroying the resource deletes the corresponding CWF process. If the process is still running, destroying it will make it end with an error.
+Destroying the resource deletes the corresponding CWF process. Destroying a running process causes it to end in error.
 
 It is NOT possible to update a CWF process.
 
 ## Example Usage
 
-This example CWF process looks for all servers whose names start by "db-slave-" and executes the specified RightScript on them,
+This example CWF process looks for all servers whose names start with "db-slave-" and executes the specified RightScript on them,
 returning the number of servers that have been affected.
 
 ```hcl
