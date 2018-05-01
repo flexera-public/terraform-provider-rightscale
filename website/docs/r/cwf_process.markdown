@@ -10,16 +10,16 @@ description: |-
 
 Use this resource to create or destroy RightScale [CloudWorkFlow processes](http://docs.rightscale.com/ss/reference/rcl/).
 
-Creating the CWF process will run it synchronously and return the output values (if any).
+Creating the CWF process runs it synchronously and returns the output values (if any). If the CWF process fails, the Terraform script will fail too.
 
-Destroying a CWF process will remove it from the CWF Console table of executed processes. It WON'T undo any action that it could have executed nor would stop any running process.
+Destroying the resource deletes the corresponding CWF process. If the process is still running, destroying it will make it end with an error.
 
 It is NOT possible to update a CWF process.
 
 ## Example Usage
 
-This example CWF process will look for all servers whose name starts by "db-slave-" and will execute the specified RightScript on them,
-returning the number of servers that have been reached.
+This example CWF process looks for all servers whose names start by "db-slave-" and executes the specified RightScript on them,
+returning the number of servers that have been affected.
 
 ```hcl
 resource "rightscale_cwf_process" "run_executable_by_prefix" {
@@ -32,10 +32,10 @@ resource "rightscale_cwf_process" "run_executable_by_prefix" {
      ]
 
   source = <<EOF
-define main($server_prefix, $rightscript_href) return $servers_reached do
-  @servers = rs_cm.servers.get(filter: ["name==" + $server_prefix])
-  @servers.current_instance().run_executable(right_script_href: $rightscript_href)
-  $servers_reached = size(@servers)
+define main($instance_prefix, $rightscript_href) return $instances_affected do
+  @instances = rs_cm.instances.get(filter: ["name==" + $instance_prefix, "state==operational"])
+  @instances.run_executable(right_script_href: $rightscript_href)
+  $instances_affected = size(@instances)
 end
 EOF
 
@@ -45,8 +45,8 @@ output "cwf_status" {
   value = "${rightscale_cwf_process.run_executable_by_prefix.status}"
 }
 
-output "cwf_servers_updated" {
-  value = "${rightscale_cwf_process.run_executable_by_prefix.outputs["$servers_reached"]}"
+output "cwf_servers_affected" {
+  value = "${rightscale_cwf_process.run_executable_by_prefix.outputs["$instances_affected"]}"
 }
 ```
 
@@ -54,12 +54,16 @@ output "cwf_servers_updated" {
 
 The following arguments are supported:
 
-* `source` - (Required) Source code to be executed, written in [RCL (RightScale CloudWorkFlow Language)](http://docs.rightscale.com/ss/reference/rcl/v2/index.html). The function should always be called main. Example:
+* `source` - (Required) Source code to be executed, written in [RCL (RightScale CloudWorkFlow Language)](http://docs.rightscale.com/ss/reference/rcl/v2/index.html). Several functions can be defined but the entry function should be called `main`. Example:
 ```hcl
   source = <<EOF
+define adder($n1, $n2) return $res do
+  $res = $n1 + $n2
+end
 define main($a, $b) return $result do
-  $result = $a + $b
-  end
+  call adder($a, $b) retrieve $tmp
+  $result = "The total is " + $tmp
+end
 EOF
 ```
 

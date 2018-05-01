@@ -313,23 +313,27 @@ end
 	)
 
 	var sourcetests = []struct {
+		name           string
 		source         string
 		valid          bool
 		expectsOutputs bool
 	}{
-		{invalidSource, false, false},
-		{goodSourceNoReturn, true, false},
-		{goodSourceWithReturn, true, true},
+		{"invalidSource", invalidSource, false, false},
+		{"goodSourceNoReturn", goodSourceNoReturn, true, false},
+		{"goodSourceWithReturn", goodSourceWithReturn, true, true},
 	}
 
 	for _, tt := range sourcetests {
 		t.Run(tt.source, func(t *testing.T) {
 			expectsOutputs, err := analyzeSource(tt.source)
-			if (tt.valid && err != nil) || (!tt.valid && err == nil) {
-				t.Errorf("source: \n `%s` \n ...was incorrectly validated (error value was `%v`)", tt.source, err)
+			if tt.valid && err != nil {
+				t.Errorf("source `%s` should be valid (but got error `%v`)", tt.name, err)
+			}
+			if !tt.valid && err == nil {
+				t.Errorf("source `%s` should be invalid", tt.name)
 			}
 			if expectsOutputs != tt.expectsOutputs {
-				t.Errorf("source: \n `%s` \n ...got incorrect expectsOutputs value: `%t` (should be `%t`)", tt.source, expectsOutputs, tt.expectsOutputs)
+				t.Errorf("source `%s` got incorrect expectsOutputs value: `%t` (should be `%t`)", tt.name, expectsOutputs, tt.expectsOutputs)
 			}
 		})
 	}

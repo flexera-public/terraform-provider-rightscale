@@ -662,13 +662,13 @@ func processOutputs(res interface{}) map[string]interface{} {
 	outputs := make(map[string]interface{}, len(outs))
 	for _, out := range outs {
 		om := out.(map[string]interface{})
-		value := om["value"].(map[string]interface{})["value"]
-		stringValue, ok := value.(string)
+		v := om["value"].(map[string]interface{})["value"]
+		s, ok := v.(string)
 		if !ok {
-			marshalValue, _ := json.Marshal(value)
-			stringValue = string(marshalValue)
+			m, _ := json.Marshal(v)
+			s = string(m)
 		}
-		outputs[om["name"].(string)] = stringValue
+		outputs[om["name"].(string)] = s
 	}
 	return outputs
 }
@@ -739,19 +739,18 @@ func (inFields Fields) onlyPopulated() Fields {
 // analyzeSource checks that the defition of the source is valid, returning an error if it's not
 // If the definition is valid, expectsOuputs boolean indicates if the defition includes the "return" keyword,
 // which indicates that output values are expected.
-func analyzeSource(source string) (expectsOutputs bool, err error) {
-	const validDefinition = "^[[:blank:]\n]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*[[:blank:]]+)?do"
+var validDefinition = regexp.MustCompile("^[[:blank:]\n]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*[[:blank:]]+)?do")
 
-	r := regexp.MustCompile(validDefinition)
-	matched := r.FindStringSubmatch(source)
+func analyzeSource(source string) (expectsOutputs bool, err error) {
+	m := validDefinition.FindStringSubmatch(source)
 	if err != nil {
 		return false, fmt.Errorf("error parsing rightscale_cwf_process source definition: %s", err)
 	}
 
-	if len(matched) != 2 {
+	if len(m) != 2 {
 		return false, fmt.Errorf("invalid rightscale_cwf_process source definition")
 	}
 
 	// if return capture group matched, expectOutputs = true
-	return matched[1] != "", nil
+	return m[1] != "", nil
 }
