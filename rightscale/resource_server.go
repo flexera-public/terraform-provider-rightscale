@@ -101,19 +101,6 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 			}
 		}
 	}
-
-	// if inputs are defined in resource, add those to instance field as proper format.
-	//	if r, ok := cmInputs(d); ok != nil {
-	//		log.Printf("[ERROR]: %v", ok)
-	//	} else {
-	//		if i, ok := d.GetOk("instance"); ok {
-	//			fields["instance"] = i.([]interface{})[0].(map[string]interface{})
-	//			log.Printf("MARKDEBUG - 2 serverWriteFields - fields[instance] is: %v", fields["instance"])
-	//			fields["instance"].(map[string]interface{})["inputs"] = r["inputs"]
-	//			log.Printf("MARKDEBUG - 3 serverWriteFields - fields[instance] is %v", fields["instance"])
-	//		}
-	//	}
-	//}
 	if o, ok := d.GetOk("optimized"); ok {
 		if o.(bool) {
 			fields["optimized"] = "true"

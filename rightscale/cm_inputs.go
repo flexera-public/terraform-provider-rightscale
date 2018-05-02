@@ -9,14 +9,9 @@ import (
 // cmInputs is a helper function that returns fields representing valid
 // RightScale rcl input parameters built from the resource data "inputs"
 // field.
-//func cmInputs(d *schema.ResourceData) (rsc.Fields, error) {
 func cmInputs(f []interface{}) (rsc.Fields, error) {
 	var inputs rsc.Fields
 	mapify := make(map[string]string)
-	//f, ok := d.GetOk("inputs")
-	//if !ok {
-	//	return inputs, nil
-	//}
 	for _, i := range f {
 		v, ok := i.(map[string]interface{})
 		if !ok {
