@@ -1,6 +1,8 @@
 package rightscale
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -43,6 +45,14 @@ func resourceInstance() *schema.Resource {
 				Description: "The ID of the instance image",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"inputs": &schema.Schema{
+				Description: "Inputs associated with an instance when incarnated from a server or server array - should be rendered via template provider - see docs",
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				// Uncomment below then they start supporting this on TypeSet
+				//ValidateFunc: validation.StringMatch(regexp.MustCompile("\\w+=\\w+:\\w+"), "values must be in format of 'KEY=type:value'"),
 			},
 			"instance_type_href": &schema.Schema{
 				Description: "The ID of the instance type",
@@ -287,6 +297,7 @@ var instanceCloudAttributes = &schema.Schema{
 }
 
 func resourceInstanceCreate(d *schema.ResourceData, m interface{}) error {
+	log.Println("MARKDEBUG - hey we hit the resourceInstanceCreate function!")
 	var mustLock bool
 	{
 		locked, ok := d.GetOk("locked")

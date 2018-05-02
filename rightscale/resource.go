@@ -2,6 +2,7 @@ package rightscale
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -15,10 +16,12 @@ func resourceCreateFunc(namespace, typ string, fieldsFunc func(*schema.ResourceD
 		if err != nil {
 			return err
 		}
+		log.Printf("MARKDEBUG - resourceCreateFunc - res.Fields is %s", res.Fields)
 		for k, v := range res.Fields {
 			d.Set(k, v)
 		}
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
+		log.Printf("MARKDEBUG - resourceCreateFunc 1 - d.id() is: %v", d.Id())
 		return nil
 	}
 }

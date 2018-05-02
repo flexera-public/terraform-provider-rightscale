@@ -12,7 +12,7 @@ func resourceServer() *schema.Resource {
 		Read:   resourceRead,
 		Exists: resourceExists,
 		Delete: resourceDelete,
-		Create: resourceCreateFunc("rs_cm", "servers", serverWriteFields),
+		Create: resourceCreateServer(serverWriteFields),
 		Update: resourceUpdateFunc(serverWriteFields),
 
 		Schema: map[string]*schema.Schema{
@@ -32,14 +32,6 @@ func resourceServer() *schema.Resource {
 				MaxItems:    1,
 				Optional:    true,
 				Elem:        resourceInstance(),
-			},
-			"inputs": &schema.Schema{
-				Description: "Inputs associated with an instance when incarnated from a server or server array - should be rendered via template provider - see docs",
-				Type:        schema.TypeSet,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				// Uncomment below then they start supporting this on TypeSet
-				//ValidateFunc: validation.StringMatch(regexp.MustCompile("\\w+=\\w+:\\w+"), "values must be in format of 'KEY=type:value'"),
 			},
 			"name": &schema.Schema{
 				Description: "name of server",
@@ -70,15 +62,37 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 		if fields["instance"].(map[string]interface{})["associate_public_ip_address"].(bool) == false {
 			delete(fields["instance"].(map[string]interface{}), "associate_public_ip_address")
 		}
-	}
-	// if inputs are defined in resource, add those to instance field as proper format
-	if _, ok := d.GetOk("inputs"); ok {
-		if r, ok := cmInputs(d); ok != nil {
-			log.Printf("[ERROR]: %v", ok)
+		log.Printf("MARKDEBUG - 1 serverWriteFields - fields[instance] is: %v", fields["instance"])
+		// Handle inputs for the server object
+		a := fields["instance"].(map[string]interface{})["inputs"].(*schema.Set)
+		log.Printf("MARKDEBUG - 2 serverWriteFields - a is: %v", a)
+		if l := a.Len(); l < 1 {
+			// inputs not defined - remove the field from the fields hash
+			log.Println("MARKDEBUG - 2.5 - hit length is less then 1")
+			delete(fields["instance"].(map[string]interface{}), "inputs")
 		} else {
-			fields["instance"].(map[string]interface{})["inputs"] = r["inputs"]
+			if r, ok := cmInputs(a); ok != nil {
+				log.Printf("[ERROR]: %v", ok)
+			} else {
+				log.Printf("MARKDEBUG - 3 serverWriteFields - r is: %v", r)
+				fields["instance"].(map[string]interface{})["inputs"] = r["inputs"]
+				log.Printf("MARKDEBUG - 4 serverWriteFields - fields[instance] is %v", fields["instance"])
+			}
 		}
 	}
+
+	// if inputs are defined in resource, add those to instance field as proper format.
+	//	if r, ok := cmInputs(d); ok != nil {
+	//		log.Printf("[ERROR]: %v", ok)
+	//	} else {
+	//		if i, ok := d.GetOk("instance"); ok {
+	//			fields["instance"] = i.([]interface{})[0].(map[string]interface{})
+	//			log.Printf("MARKDEBUG - 2 serverWriteFields - fields[instance] is: %v", fields["instance"])
+	//			fields["instance"].(map[string]interface{})["inputs"] = r["inputs"]
+	//			log.Printf("MARKDEBUG - 3 serverWriteFields - fields[instance] is %v", fields["instance"])
+	//		}
+	//	}
+	//}
 	if o, ok := d.GetOk("optimized"); ok {
 		if o.(bool) {
 			fields["optimized"] = "true"
@@ -94,5 +108,24 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 			fields[f] = v
 		}
 	}
+	log.Printf("MARKDEBUG - 4 serverWriteFields - fields[instance] is %v", fields)
 	return rsc.Fields{"server": fields}
+}
+
+func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(d *schema.ResourceData, m interface{}) error {
+	return func(d *schema.ResourceData, m interface{}) error {
+		client := m.(rsc.Client)
+		res, err := client.Create("rs_cm", "servers", fieldsFunc(d))
+		if err != nil {
+			return err
+		}
+		log.Printf("MARKDEBUG - resourceCreateServer 1 - res.Fields is %s", res.Fields)
+		for k, v := range res.Fields {
+			log.Printf("MARKDEBUG - resourceCreateServer2 - ranging res.Fields - k is: %v, and v is: %v", k, v)
+			d.Set(k, v)
+		}
+		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
+		log.Printf("MARKDEBUG - resourceCreateServer 3 - d.id() is: %v", d.Id())
+		return nil
+	}
 }
