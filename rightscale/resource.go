@@ -9,7 +9,7 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
-func resourceCreateFunc(namespace, typ string, fieldsFunc func(*schema.ResourceData) rsc.Fields) func(d *schema.ResourceData, m interface{}) error {
+func resourceCreateFunc(namespace, typ string, fieldsFunc func(*schema.ResourceData) rsc.Fields) func(*schema.ResourceData, interface{}) error {
 	return func(d *schema.ResourceData, m interface{}) error {
 		client := m.(rsc.Client)
 		res, err := client.Create(namespace, typ, fieldsFunc(d))
@@ -26,7 +26,7 @@ func resourceCreateFunc(namespace, typ string, fieldsFunc func(*schema.ResourceD
 	}
 }
 
-func resourceUpdateFunc(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(d *schema.ResourceData, m interface{}) error {
+func resourceUpdateFunc(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(*schema.ResourceData, interface{}) error {
 	return func(d *schema.ResourceData, m interface{}) error {
 		client := m.(rsc.Client)
 		loc, err := locator(d)

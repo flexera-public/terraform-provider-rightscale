@@ -48,8 +48,8 @@ func resourceInstance() *schema.Resource {
 			},
 			"inputs": &schema.Schema{
 				Description: "Inputs associated with an instance when incarnated from a server or server array - should be rendered via template provider - see docs",
-				Type:        schema.TypeSet,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeMap},
 				Optional:    true,
 				// Uncomment below then they start supporting this on TypeSet
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile("\\w+=\\w+:\\w+"), "values must be in format of 'KEY=type:value'"),

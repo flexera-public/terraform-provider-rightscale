@@ -29,8 +29,9 @@ func resourceServer() *schema.Resource {
 			"instance": &schema.Schema{
 				Description: "server instance details",
 				Type:        schema.TypeList,
+				MinItems:    1,
 				MaxItems:    1,
-				Optional:    true,
+				Required:    true,
 				Elem:        resourceInstance(),
 			},
 			"name": &schema.Schema{
@@ -45,9 +46,29 @@ func resourceServer() *schema.Resource {
 			},
 
 			// Read-only fields
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"current_instance": {
+				Type:     schema.TypeMap,
+				Computed: true,
+			},
 			"links": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeMap},
+				Computed: true,
+			},
+			"next_instance": {
+				Type:     schema.TypeMap,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"updated_at": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -64,9 +85,9 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 		}
 		log.Printf("MARKDEBUG - 1 serverWriteFields - fields[instance] is: %v", fields["instance"])
 		// Handle inputs for the server object
-		a := fields["instance"].(map[string]interface{})["inputs"].(*schema.Set)
+		a := fields["instance"].(map[string]interface{})["inputs"].([]interface{})
 		log.Printf("MARKDEBUG - 2 serverWriteFields - a is: %v", a)
-		if l := a.Len(); l < 1 {
+		if len(a) < 1 {
 			// inputs not defined - remove the field from the fields hash
 			log.Println("MARKDEBUG - 2.5 - hit length is less then 1")
 			delete(fields["instance"].(map[string]interface{}), "inputs")
@@ -112,7 +133,7 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 	return rsc.Fields{"server": fields}
 }
 
-func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(d *schema.ResourceData, m interface{}) error {
+func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(*schema.ResourceData, interface{}) error {
 	return func(d *schema.ResourceData, m interface{}) error {
 		client := m.(rsc.Client)
 		res, err := client.Create("rs_cm", "servers", fieldsFunc(d))
