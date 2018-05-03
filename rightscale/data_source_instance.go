@@ -125,10 +125,11 @@ func dataSourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"cloud_href": {
-				Type:        schema.TypeString,
-				Description: "ID of instance cloud resource, exclusive with 'server_array_href'",
-				Optional:    true,
-				ForceNew:    true,
+				Type:          schema.TypeString,
+				Description:   "ID of instance cloud resource, exclusive with 'server_array_href'",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"server_array_href"},
 			},
 			"cloud_specific_attributes": instanceCloudAttributes,
 			"created_at": {
@@ -167,10 +168,11 @@ func dataSourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"server_array_href": {
-				Type:        schema.TypeString,
-				Description: "ID of instance server array resource, exclusive with 'cloud_href'",
-				Optional:    true,
-				ForceNew:    true,
+				Type:          schema.TypeString,
+				Description:   "ID of instance server array resource, exclusive with 'cloud_href'",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"cloud_href"},
 			},
 			"state": {
 				Type:     schema.TypeString,
