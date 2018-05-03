@@ -8,9 +8,9 @@ description: |-
 
 # rightscale_multi_cloud_image
 
-Use this data source to get the ID or other attributes of an existing multi cloud image for use in other resources.
+Use this data source to get the ID or other attributes of an existing [multi cloud image](http://docs.rightscale.com/cm/dashboard/design/multicloud_images/) for use in other resources.
 
-Filter block is optional - ommitting it will result in the first available multi cloud image in a given cloud.
+Filter block is optional - ommitting it will result in the first available multi cloud image in the account.
 
 ## Example Usage 1: Basic configuration of a multi cloud image data source
 
