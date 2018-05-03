@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -53,10 +54,8 @@ type (
 		// given source code. The process runs synchronously and
 		// RunProcess returns after it completes or fails. The RCL code
 		// must define a definition called 'main' that accepts the given
-		// parameter values. The expectsOutputs parameter should be set to
-		// true when the source code specifies outputs and the calling code
-		// needs to ensure output values are available before RunProcess returns
-		RunProcess(source string, parameters []*Parameter, expectsOutputs bool) (*Process, error)
+		// parameter values.
+		RunProcess(source string, parameters []*Parameter) (*Process, error)
 		// GetProcess retrieves the process with the given href.
 		GetProcess(href string) (*Process, error)
 		// DeleteProcess deletes the process with the given href.
@@ -435,7 +434,12 @@ func (rsc *client) Delete(l *Locator) error {
 
 // RunProcess runs the given RCL code synchronously and returns the process outputs.
 // The code must contain a 'main' definition that accepts the given parameter values.
-func (rsc *client) RunProcess(source string, params []*Parameter, expectsOutputs bool) (*Process, error) {
+func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, error) {
+	expectsOutputs, err := analyzeSource(source)
+	if err != nil {
+		return nil, err
+	}
+
 	var (
 		projectID   = strconv.Itoa(rsc.ProjectID)
 		processHref string
@@ -466,7 +470,6 @@ func (rsc *client) RunProcess(source string, params []*Parameter, expectsOutputs
 
 	var (
 		process *Process
-		err     error
 	)
 
 	// print link to CWF console if DEBUG is set, mainly useful for tests
@@ -489,6 +492,7 @@ func (rsc *client) RunProcess(source string, params []*Parameter, expectsOutputs
 
 	timeout := time.NewTimer(1 * time.Hour)
 	ticker := time.NewTicker(2 * time.Second)
+	expectsOutputsTimeout := 5
 	defer ticker.Stop()
 	defer timeout.Stop()
 
@@ -520,6 +524,11 @@ func (rsc *client) RunProcess(source string, params []*Parameter, expectsOutputs
 
 				// Keep waiting if outputs aren't yet present
 				if expectsOutputs && len(process.Outputs) == 0 {
+					expectsOutputsTimeout--
+					if expectsOutputsTimeout == 0 {
+						err = fmt.Errorf("no Outputs received from your CWF process, check your return clause")
+						return nil, err
+					}
 					continue
 				}
 
@@ -584,16 +593,14 @@ func (rsc *client) API() *rsapi.API {
 // names. The code must not include any definition, use RunProcess to run
 // definitions.
 func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}, error) {
-	expectsOutputs := false
 	source := "define main() "
 	if len(outputs) > 0 {
 		source += "return " + strings.Join(outputs, ", ") + " "
-		expectsOutputs = true
 	}
 	rcl = strings.Trim(rcl, "\n\t")
 	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
 	source += "do\n\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\nend"
-	p, err := rsc.RunProcess(source, nil, expectsOutputs)
+	p, err := rsc.RunProcess(source, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +665,13 @@ func processOutputs(res interface{}) map[string]interface{} {
 	outputs := make(map[string]interface{}, len(outs))
 	for _, out := range outs {
 		om := out.(map[string]interface{})
-		outputs[om["name"].(string)] = om["value"].(map[string]interface{})["value"]
+		v := om["value"].(map[string]interface{})["value"]
+		s, ok := v.(string)
+		if !ok {
+			m, _ := json.Marshal(v)
+			s = string(m)
+		}
+		outputs[om["name"].(string)] = s
 	}
 	return outputs
 }
@@ -724,4 +737,23 @@ func (inFields Fields) onlyPopulated() Fields {
 		}
 	}
 	return outFields
+}
+
+// analyzeSource checks that the defition of the source is valid, returning an error if it's not
+// If the definition is valid, expectsOuputs boolean indicates if the defition includes the "return" keyword,
+// which indicates that output values are expected.
+var validDefinition = regexp.MustCompile("^[[:blank:]\n]*define[[:blank:]]*[\\w_\\.]+[[:blank:]]*\\([@$\\w _,]*\\)[[:blank:]]+(return.*[[:blank:]]+)?do")
+
+func analyzeSource(source string) (expectsOutputs bool, err error) {
+	m := validDefinition.FindStringSubmatch(source)
+	if err != nil {
+		return false, fmt.Errorf("error parsing rightscale_cwf_process source definition: %s", err)
+	}
+
+	if len(m) != 2 {
+		return false, fmt.Errorf("invalid rightscale_cwf_process source definition")
+	}
+
+	// if return capture group matched, expectOutputs = true
+	return m[1] != "", nil
 }

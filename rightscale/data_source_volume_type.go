@@ -7,11 +7,11 @@ import (
 
 // Example:
 //
-// data "rightscale_volume_type" "standard" {
-//   filter {
-//     name = "standard"
-//   }
+// data "rightscale_volume_type" "gp2" {
 //   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+//   filter {
+//     name = "gp2"
+//   }
 // }
 
 func dataSourceVolumeType() *schema.Resource {

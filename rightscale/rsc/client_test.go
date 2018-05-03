@@ -290,3 +290,51 @@ func TestOnlyPopulated(t *testing.T) {
 		t.Errorf("Result of onlyPopulated was incorrect, got: %v, expected: %v", testFields.onlyPopulated(), expectedResult)
 	}
 }
+
+func TestAnalyzeSource(t *testing.T) {
+	const (
+		invalidSource = `
+define main( do
+	foo
+end
+`
+		goodSourceNoReturn = `
+define main() do
+	bar
+end
+`
+		goodSourceWithReturn = `
+define main() return $out1, $out2 $suma do
+	$out1 = 156.5534
+	$out2 = 42421000
+	$suma = $out1 + $out2
+end
+`
+	)
+
+	var sourcetests = []struct {
+		name           string
+		source         string
+		valid          bool
+		expectsOutputs bool
+	}{
+		{"invalidSource", invalidSource, false, false},
+		{"goodSourceNoReturn", goodSourceNoReturn, true, false},
+		{"goodSourceWithReturn", goodSourceWithReturn, true, true},
+	}
+
+	for _, tt := range sourcetests {
+		t.Run(tt.source, func(t *testing.T) {
+			expectsOutputs, err := analyzeSource(tt.source)
+			if tt.valid && err != nil {
+				t.Errorf("source `%s` should be valid (but got error `%v`)", tt.name, err)
+			}
+			if !tt.valid && err == nil {
+				t.Errorf("source `%s` should be invalid", tt.name)
+			}
+			if expectsOutputs != tt.expectsOutputs {
+				t.Errorf("source `%s` got incorrect expectsOutputs value: `%t` (should be `%t`)", tt.name, expectsOutputs, tt.expectsOutputs)
+			}
+		})
+	}
+}
