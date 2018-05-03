@@ -34,7 +34,7 @@ The following arguments are supported:
 
  * `instance_type_href` - (Required) The href of the instance type
 
- * `server_template_href` - (Required) The ID of the instance server template resource
+ * `server_template_href` - (Optional) The ID of the instance server template resource
  
  * `associate_public_ip_address` - (Optional) Indicates if the instance will get a Public IP address
 
