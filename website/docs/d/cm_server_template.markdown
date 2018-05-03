@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_server_template
 
-Use this data source to get the ID or other attributes of an existing server template for use in other resources.
+Use this data source to get the ID or other attributes of a server template in your account for use in other resources.
 
 Filter block is optional - ommitting it will result in the first available server template in a given cloud.
 
