@@ -132,8 +132,9 @@ func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func
 			log.Printf("MARKDEBUG - resourceCreateServer2 - ranging res.Fields - k is: %v, and v is: %v", k, v)
 			d.Set(k, v)
 		}
+		log.Printf("MARKDEBUG - resourceCreateServer 3 - before d.SetId - d.id() is: %v", d.Id())
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
-		log.Printf("MARKDEBUG - resourceCreateServer 3 - d.id() is: %v", d.Id())
+		log.Printf("MARKDEBUG - resourceCreateServer 4 - after d.SetId - d.id() is: %v", d.Id())
 		return nil
 	}
 }
