@@ -2,6 +2,7 @@ package rightscale
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -40,6 +41,7 @@ func resourceUpdateFunc(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(*
 }
 
 func resourceRead(d *schema.ResourceData, m interface{}) error {
+	log.Printf("MARKDEBUG - resourceRead 1 - d.id() is: %v", d.Id())
 	client := m.(rsc.Client)
 	loc, err := locator(d)
 	if err != nil {
@@ -56,6 +58,7 @@ func resourceRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceExists(d *schema.ResourceData, m interface{}) (bool, error) {
+	log.Printf("MARKDEBUG - resourceExists 1 - d.id() is: %v", d.Id())
 	client := m.(rsc.Client)
 	loc, err := locator(d)
 	if err != nil {
