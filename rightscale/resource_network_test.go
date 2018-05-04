@@ -31,9 +31,9 @@ func TestAccRightScaleNetwork(t *testing.T) {
 		CheckDestroy: testAccCheckNetworkDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccNetwork(NetworkName),
+				Config: testAccNetwork(NetworkName, networkDescription, networkCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkExists("rightscale_network.foobar", &depl),
+					testAccCheckNetworkExists("rightscale_network.test_network", &depl),
 					testAccCheckNetworkDescription(&depl, networkDescription),
 					testAccCheckNetworkCidrBlock(&depl, networkCidrBlock),
 				),
@@ -55,7 +55,7 @@ func testAccCheckNetworkExists(n string, depl *cm15.Network) resource.TestCheckF
 
 		loc := getCMClient().NetworkLocator(getHrefFromID(rs.Primary.ID))
 
-		found, err := loc.Show(nil)
+		found, err := loc.Show()
 		if err != nil {
 			return err
 		}
@@ -76,10 +76,10 @@ func testAccCheckNetworkDescription(depl *cm15.Network, desc string) resource.Te
 
 }
 
-func testAccCheckNetworkCidrBlock(depl *cm15.Network, scope string) resource.TestCheckFunc {
+func testAccCheckNetworkCidrBlock(depl *cm15.Network, cidr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if depl.ServerTagScope != scope {
-			return fmt.Errorf("got server tag scope %q, expected %q", depl.ServerTagScope, scope)
+		if depl.CidrBlock != cidr {
+			return fmt.Errorf("got cidr_block %q, expected %q", depl.CidrBlock, cidr)
 		}
 		return nil
 	}
@@ -89,7 +89,7 @@ func testAccCheckNetworkDestroy(s *terraform.State) error {
 	c := getCMClient()
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "rightscale_Network" {
+		if rs.Type != "rightscale_network" {
 			continue
 		}
 
@@ -114,12 +114,13 @@ func testAccCheckNetworkDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNetwork(dep string) string {
+func testAccNetwork(name string, desc string, cidr string) string {
 	return fmt.Sprintf(`
 		resource "rightscale_network" "test_network" {
 		   name = %q
+		   description = %q
 		   cidr_block = %q
 		   cloud_href = "/api/clouds/6"
 		 }
-`, dep, networkCidrBlock)
+`, name, desc, cidr)
 }
