@@ -38,7 +38,7 @@ func resourceNetwork() *schema.Resource {
 				ForceNew:    true,
 			},
 			"deployment_href": &schema.Schema{
-				Description: "Optional href of deployment that owns the network.  Providing this value scopes the network to the provided deployment href.",
+				Description: "Optional href of deployment that owns the network.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
