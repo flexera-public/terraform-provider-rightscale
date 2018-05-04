@@ -46,8 +46,10 @@ func TestAccRightScaleInstance_userdata(t *testing.T) {
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
-		userData     = "UserData" + acctest.RandString(10)
-		inst         cm15.Instance
+		// FIXME - need subnet hrefs, not network href.
+		//networkHref  = getTestNetworkFromEnv()
+		userData = "UserData" + acctest.RandString(10)
+		inst     cm15.Instance
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
