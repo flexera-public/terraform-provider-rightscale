@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_network
 
-Use this resource to create, update or destroy rightscale [networks](http://docs.rightscale.com/cm/dashboard/manage/networks/index.html) in cloud management.
+Use this resource to create, update or destroy rightscale [networks](http://reference.rightscale.com/api1.5/resources/ResourceNetworks.html) in cloud management.
 
 ## Example Usage
 
@@ -20,7 +20,7 @@ resource "rightscale_network" "us-oregon-devops-vpc" {
   cidr_block = "192.168.0.0/16"
 }
 
-output "us-oregon-devops-vpc-uuid" {
+output "us-oregon-devops-vpc-aws-uid" {
   value = "${rightscale_network.us-oregon-devops-vpc.resource_uid}"
 }
 ```
@@ -41,7 +41,7 @@ The following arguments are supported:
 
 * `route_table_href` - (Optional) Sets the default route table for this network, useful if you create the route table with a different resource.
 
-* `deployment_href` - (Optional) ID of deployment that is associated with the network.
+* `deployment_href` - (Optional) HREF of the deployment that owns the network.  Providing this value scopes the network to the provided deployment href.
 
 ## Attributes Reference
 

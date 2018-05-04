@@ -3,12 +3,12 @@ layout: "rightscale"
 page_title: "Rightscale: network"
 sidebar_current: "docs-rightscale-datasource-network"
 description: |-
-  Defines a network datasource to operate against. 
+  Defines a network datasource to operate against.
 ---
 
 # rightscale_network
 
-Use this data source to locate and extract info about an existing [network](http://docs.rightscale.com/cm/dashboard/manage/networks/index.html) to pass to other rightscale resources.
+Use this data source to locate and extract info about an existing [network](http://reference.rightscale.com/api1.5/resources/ResourceNetworks.html) to pass to other rightscale resources.
 
 ## Example Usage: Get existing network resource_uid
 
@@ -19,7 +19,7 @@ data "rightscale_network" "infrastructure-us-east" {
   }
 }
 
-output "prod-infra-us-east-uid" {
+output "prod-infra-us-east-aws-uid" {
   value = "${data.rightscale_deployment.infrastructure.resource_uid}"
 }
 ```
@@ -30,7 +30,7 @@ The following arguments are supported:
 
 * `filter` (Optional) block supports:
 
-  * `name` - (Optional) Network name.  Pattern match. 
+  * `name` - (Optional) Network name.  Pattern match.
 
   * `cloud_href` - (Optional) Cloud Href of network.
 

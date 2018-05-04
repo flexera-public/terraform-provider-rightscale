@@ -38,7 +38,7 @@ func resourceNetwork() *schema.Resource {
 				ForceNew:    true,
 			},
 			"deployment_href": &schema.Schema{
-				Description: "ID of deployment that is associated with the network",
+				Description: "Optional href of deployment that owns the network.  Providing this value scopes the network to the provided deployment href.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -77,8 +77,9 @@ func resourceNetwork() *schema.Resource {
 				Computed: true,
 			},
 			"href": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Description: "href of network",
+				Computed:    true,
 			},
 		},
 	}
