@@ -24,6 +24,7 @@ var envVars = map[string]string{
 	"image":        "RIGHTSCALE_IMAGE_HREF",
 	"template":     "RIGHTSCALE_TEMPLATE_HREF",
 	"deployment":   "RIGHTSCALE_DEPLOYMENT_HREF",
+	"network":      "RIGHTSCALE_NETWORK_HREF",
 }
 
 func init() {
@@ -95,6 +96,11 @@ func getTestImageFromEnv() string {
 // getTestDeploymentFromEnv returns the deployment href environment variable.
 func getTestDeploymentFromEnv() string {
 	return envSearch(envVars["deployment"])
+}
+
+// getNetworkFromEnv returns the network href environment variable.
+func getTestNetworkFromEnv() string {
+	return envSearch(envVars["network"])
 }
 
 func getHrefFromID(id string) string {
