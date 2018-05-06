@@ -9,13 +9,11 @@ import (
 // Example:
 //
 // resource "rightscale_security_group_rule" "allow-ssh-from-all" {
-//     cloud_href = "${data.rightscale_cloud.ec2_us_east_1.id}"
 //     security_group_href = "${rightscale_security_group.my_security_group.href}"
-//     description = "Allow ssh from anywhere"
 //	   direction = "ingress"
 //     protocol = "tcp"
 //	   source_type = "cidr_ips"
-//     cidr_ips = "0.0.0.0/24"
+//     cidr_ips = "0.0.0.0/0"
 //	   protocol_details {
 //       start_port = "22"
 //       end_port = "22"
