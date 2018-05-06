@@ -6,13 +6,20 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
+// Example:
+//
+// resource "rightscale_security_group_rule" "allow-ssh" {
+//     cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+//     network_href = ${resource.network.my_network.id}
+//     description = "my security group"
+// }
+
 func resourceSecurityGroupRule() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
 		Exists: resourceExists,
 		Delete: resourceDelete,
-		Create: resourceSecurityGroupRuleCreate,
-		Update: resourceUpdateFunc(securityGroupRuleUpdateFields),
+		Create: resourceCreateFunc("rs_cm", "security_group_rules", securityGroupRuleWriteFields),
 
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -119,43 +126,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 	}
 }
 
-func resourceSecurityGroupRuleCreate(d *schema.ResourceData, m interface{}) error {
-	var desc string
-	{
-		if de, ok := d.GetOk("description"); ok {
-			desc = de.(string)
-		}
-	}
-
-	client := m.(rsc.Client)
-
-	// first create network with no default route table
-	fields := securityGroupRuleCreateFields(d)
-	res, err := client.Create("rs_cm", "networks", fields)
-	if err != nil {
-		return err
-	}
-	for k, v := range res.Fields {
-		d.Set(k, v)
-	}
-
-	// then update with description if any
-	if desc != "" {
-		d.Set("description", desc)
-		if err := resourceUpdateFunc(securityGroupRuleUpdateFields)(d, client); err != nil {
-			// Attempt to delete previously created network, ignore errors
-			client.Delete(res.Locator)
-			return err
-		}
-	}
-
-	// set ID last so Terraform does not assume the network has been
-	// created until all operations have completed successfully.
-	d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
-	return nil
-}
-
-func securityGroupRuleCreateFields(d *schema.ResourceData) rsc.Fields {
+func securityGroupRuleWriteFields(d *schema.ResourceData) rsc.Fields {
 	fields := rsc.Fields{
 		"protocol":            d.Get("protocol"),
 		"security_group_href": d.Get("security_group_href"),
@@ -168,14 +139,6 @@ func securityGroupRuleCreateFields(d *schema.ResourceData) rsc.Fields {
 		if v, ok := d.GetOk(f); ok {
 			fields[f] = v
 		}
-	}
-	return rsc.Fields{"security_group_rule": fields}
-}
-
-func securityGroupRuleUpdateFields(d *schema.ResourceData) rsc.Fields {
-	fields := rsc.Fields{}
-	if v, ok := d.GetOk("description"); ok {
-		fields["description"] = v
 	}
 	return rsc.Fields{"security_group_rule": fields}
 }
