@@ -86,7 +86,7 @@ func testAccCheckNetworkGatewayDestroy(s *terraform.State) error {
 		loc := c.NetworkGatewayLocator(getHrefFromID(rs.Primary.ID))
 		depls, err := loc.Index(nil)
 		if err != nil {
-			return fmt.Errorf("failed to check for existence of Network: %s", err)
+			return fmt.Errorf("failed to check for existence of Network Gateway: %s", err)
 		}
 		found := false
 		self := strings.Split(rs.Primary.ID, ":")[1]
@@ -97,7 +97,7 @@ func testAccCheckNetworkGatewayDestroy(s *terraform.State) error {
 			}
 		}
 		if found {
-			return fmt.Errorf("Network still exists")
+			return fmt.Errorf("Network Gateway still exists")
 		}
 	}
 
