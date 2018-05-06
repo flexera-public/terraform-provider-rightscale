@@ -8,37 +8,41 @@ import (
 
 // Example:
 //
-// resource "rightscale_security_group_rule" "allow-ssh" {
-//     cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
-//     network_href = ${resource.network.my_network.id}
-//     description = "my security group"
+// resource "rightscale_security_group_rule" "allow-ssh-from-all" {
+//     cloud_href = "${data.rightscale_cloud.ec2_us_east_1.id}"
+//     security_group_href = "${rightscale_security_group.my_security_group.href}"
+//     description = "Allow ssh from anywhere"
+//	   direction = "ingress"
+//     protocol = "tcp"
+//	   source_type = "cidr_ips"
+//     cidr_ips = "0.0.0.0/24"
+//	   protocol_details {
+//       start_port = "22"
+//       end_port = "22"
+//     }
 // }
 
 func resourceSecurityGroupRule() *schema.Resource {
 	return &schema.Resource{
-		Read:   resourceRead,
+		Read:   resourceSecurityGroupRuleRead,
 		Exists: resourceExists,
 		Delete: resourceDelete,
-		Create: resourceCreateFunc("rs_cm", "security_group_rules", securityGroupRuleWriteFields),
+		Create: resourceSecurityGroupRuleCreate,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			"source_type": {
 				Type:         schema.TypeString,
-				Description:  "Allow or deny rule. Defaults to allow. Supported by AzureRM cloud only.",
-				Optional:     true,
+				Description:  "Source type. May be a CIDR block or another Security Group. Options are 'cidr_ips' or 'group'.",
+				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"allow", "deny"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"cidr_ips", "group"}, false),
 			},
 			"cidr_ips": {
-				Type:        schema.TypeString,
-				Description: "An IP address range in CIDR notation. Required if source_type is 'cidr_ips'.",
-				Required:    true,
-				ForceNew:    true,
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Description: "Description of rule.",
-				Optional:    true,
+				Type:          schema.TypeString,
+				Description:   "An IP address range in CIDR notation. Required if source_type is 'cidr'. Conflicts with 'group_name' and 'group_owner'",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"group_name", "group_owner"},
 			},
 			"direction": {
 				Type:         schema.TypeString,
@@ -48,16 +52,18 @@ func resourceSecurityGroupRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ingress", "egress"}, false),
 			},
 			"group_name": {
-				Type:        schema.TypeString,
-				Description: "Name of source Security Group. Required if source_type is 'group'.",
-				Optional:    true,
-				ForceNew:    true,
+				Type:          schema.TypeString,
+				Description:   "Name of source Security Group. Required if source_type is 'group'.  Conflicts with 'cidr_ips'.",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"cidr_ips"},
 			},
 			"group_owner": {
-				Type:        schema.TypeString,
-				Description: "Owner of source Security Group. Required if source_type is 'group'.",
-				Optional:    true,
-				ForceNew:    true,
+				Type:          schema.TypeString,
+				Description:   "Owner of source Security Group. Required if source_type is 'group'. Conflicts with 'cidr_ips'.",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"cidr_ips"},
 			},
 			"priority": {
 				Type:        schema.TypeInt,
@@ -66,10 +72,11 @@ func resourceSecurityGroupRule() *schema.Resource {
 				ForceNew:    true,
 			},
 			"protocol": {
-				Type:        schema.TypeString,
-				Description: "Protocol to filter on.",
-				Required:    true,
-				ForceNew:    true,
+				Type:         schema.TypeString,
+				Description:  "Protocol to filter on.  Options are 'tcp', 'udp', 'icmp' and 'all'.",
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"tcp", "udp", "icmp", "all"}, false),
 			},
 			"protocol_details": {
 				Type:     schema.TypeList,
@@ -122,8 +129,55 @@ func resourceSecurityGroupRule() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 				Computed: true,
 			},
+			"href": {
+				Type:        schema.TypeString,
+				Description: "href of security group rule",
+				Computed:    true,
+			},
 		},
 	}
+}
+
+func resourceSecurityGroupRuleCreate(d *schema.ResourceData, m interface{}) error {
+	client := m.(rsc.Client)
+	res, err := client.Create("rs_cm", "security_group_rules", securityGroupRuleWriteFields(d))
+	if err != nil {
+		return err
+	}
+	for k, v := range res.Fields {
+		// for some reason the api requires 'cidr_ips' for source_type, but returns 'cidr' in the response.
+		if k == "source_type" {
+			d.Set(k, "cidr_ips")
+		} else {
+			d.Set(k, v)
+		}
+	}
+	// Sets 'href' which is rightscale href (for stitching together cm resources IN rightscale) without namespace.
+	d.Set("href", res.Locator.Href)
+	// Sets 'id' which allows terraform to locate the objects created which includes namespace.
+	d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
+	return nil
+}
+
+func resourceSecurityGroupRuleRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(rsc.Client)
+	loc, err := locator(d)
+	if err != nil {
+		return err
+	}
+	res, err := client.Get(loc)
+	if err != nil {
+		return handleRSCError(d, err)
+	}
+	for k, v := range res.Fields {
+		// for some reason the api requires 'cidr_ips' for source_type, but returns 'cidr' in the response.
+		if k == "source_type" {
+			d.Set(k, "cidr_ips")
+		} else {
+			d.Set(k, v)
+		}
+	}
+	return nil
 }
 
 func securityGroupRuleWriteFields(d *schema.ResourceData) rsc.Fields {
@@ -132,13 +186,15 @@ func securityGroupRuleWriteFields(d *schema.ResourceData) rsc.Fields {
 		"security_group_href": d.Get("security_group_href"),
 		"source_type":         d.Get("source_type"),
 	}
+	if i, ok := d.GetOk("protocol_details"); ok {
+		fields["protocol_details"] = i.([]interface{})[0].(map[string]interface{})
+	}
 	for _, f := range []string{
 		"action", "cidr_ips", "direction", "group_name", "group_owner", "priority",
-		"protocol_details",
 	} {
 		if v, ok := d.GetOk(f); ok {
 			fields[f] = v
 		}
 	}
-	return rsc.Fields{"security_group_rule": fields}
+	return rsc.Fields{"security_group_href": d.Get("security_group_href"), "security_group_rule": fields}
 }
