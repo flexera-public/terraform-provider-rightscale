@@ -41,7 +41,7 @@ func resourceSecurityGroup() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Description: "name of the security group cloud",
+				Description: "name of the security group",
 				Required:    true,
 				ForceNew:    true,
 			},

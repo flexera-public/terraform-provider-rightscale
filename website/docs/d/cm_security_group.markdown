@@ -40,7 +40,7 @@ The following arguments are supported:
 
   * `network_href` - (Optional) Network href that security group is created in.
 
-  * `deployment_href` - (Optional) HREF of the deployment that owns the security group.
+  * `deployment_href` - (Optional) Href of the deployment that owns the security group.
 
 ## Attributes Reference
 
