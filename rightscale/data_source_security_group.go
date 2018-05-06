@@ -8,10 +8,10 @@ import (
 // Example:
 //
 // data "rightscale_security_group" "ssh" {
+//   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
 //   filter {
 //     resource_uid = "sg-c31ee987"
 //   }
-//   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
 // }
 
 func dataSourceSecurityGroup() *schema.Resource {
