@@ -24,7 +24,8 @@ func TestAccRightScaleSecurityGroup(t *testing.T) {
 		SecurityGroupName = "terraform-test-" + testString + acctest.RandString(10)
 		depl              cm15.SecurityGroup
 		// This test will execute against default network in this cloud
-		cloudHref = getTestCloudFromEnv()
+		cloudHref   = getTestCloudFromEnv()
+		networkHref = getTestNetworkFromEnv()
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -32,7 +33,7 @@ func TestAccRightScaleSecurityGroup(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSecurityGroup(SecurityGroupName, securityGroupDescription, cloudHref),
+				Config: testAccSecurityGroup(SecurityGroupName, securityGroupDescription, cloudHref, networkHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("rightscale_security_group.test_sg", &depl),
 					testAccCheckSecurityGroupDescription(&depl, securityGroupDescription),
@@ -106,12 +107,13 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSecurityGroup(name string, desc string, cloud string) string {
+func testAccSecurityGroup(name string, desc string, cloud string, network string) string {
 	return fmt.Sprintf(`
 		resource "rightscale_security_group" "test_sg" {
 		   name = %q
 		   description = %q
 		   cloud_href = %q
+		   network_href = %q
 		 }
-`, name, desc, cloud)
+`, name, desc, cloud, network)
 }
