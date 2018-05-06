@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_security_group
 
-Use this resource to create, update or destroy rightscale [security groups](http://reference.rightscale.com/api1.5/resources/ResourceSecurityGroups.html) in cloud management.
+Use this resource to create, update or destroy rightscale [security groups](http://reference.rightscale.com/api1.5/resources/ResourceSecurityGroups.html).
 
 ## Example Usage - Create a security group
 
@@ -37,7 +37,7 @@ The following arguments are supported:
 
 * `description` - (Optional) Security group description.
 
-* `deployment_href` - (Optional) HREF of the deployment that owns the security group.  If you wish to use a deployment object as top level ownership construct, perhaps allocating the new security group to a single deployment, then provide this href.
+* `deployment_href` - (Optional) Href of the deployment that owns the security group.  If you wish to use a deployment object as top level ownership construct, perhaps allocating the new security group to a single deployment, then provide this href.
 
 ## Attributes Reference
 
