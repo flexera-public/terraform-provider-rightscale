@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/rightscale/rsc/cm15"
+	"github.com/rightscale/rsc/rsapi"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -22,7 +23,8 @@ func TestAccRightScaleSecurityGroup(t *testing.T) {
 	var (
 		SecurityGroupName = "terraform-test-" + testString + acctest.RandString(10)
 		depl              cm15.SecurityGroup
-		cloudHref         = getTestCloudFromEnv()
+		// This test will execute against default network in this cloud
+		cloudHref = getTestCloudFromEnv()
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -53,7 +55,8 @@ func testAccCheckSecurityGroupExists(n string, depl *cm15.SecurityGroup) resourc
 
 		loc := getCMClient().SecurityGroupLocator(getHrefFromID(rs.Primary.ID))
 
-		found, err := loc.Show()
+		var params rsapi.APIParams
+		found, err := loc.Show(params)
 		if err != nil {
 			return err
 		}
