@@ -123,7 +123,7 @@ The following arguments are supported:
 
   * `time` - (Required) Specifies the time when an alert-based array resizes.
 
-* `instance` - (Required) See [rightscale_instance](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_server.markdown)
+* `instance` - (Required) See [rightscale_instance](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_instance.markdown)
 
 
 ## Attribute Reference
