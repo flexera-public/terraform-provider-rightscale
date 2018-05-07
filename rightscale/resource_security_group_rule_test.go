@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	cidrIps = "192.168.1.66/32"
+	sgCidrIps = "192.168.1.66/32"
 )
 
 func TestAccRightScaleSecurityRuleGroup(t *testing.T) {
@@ -29,10 +29,10 @@ func TestAccRightScaleSecurityRuleGroup(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupRuleDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSecurityGroupRule(securityGroup, cidrIps),
+				Config: testAccSecurityGroupRule(securityGroup, sgCidrIps),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("rightscale_security_group_rule.test_sg_rule", &depl),
-					testAccCheckSecurityGroupRuleCIDR(&depl, cidrIps),
+					testAccCheckSecurityGroupRuleCIDR(&depl, sgCidrIps),
 				),
 			},
 		},
@@ -64,10 +64,10 @@ func testAccCheckSecurityGroupRuleExists(n string, depl *cm15.SecurityGroupRule)
 	}
 }
 
-func testAccCheckSecurityGroupRuleCIDR(depl *cm15.SecurityGroupRule, cidr_ips string) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRuleCIDR(depl *cm15.SecurityGroupRule, cidrIps string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if depl.CidrIps != cidr_ips {
-			return fmt.Errorf("got cidr_ips %q, expected %q", depl.CidrIps, cidr_ips)
+		if depl.CidrIps != cidrIps {
+			return fmt.Errorf("got cidr_ips %q, expected %q", depl.CidrIps, cidrIps)
 		}
 		return nil
 	}
