@@ -44,7 +44,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 			},
 			"direction": {
 				Type:         schema.TypeString,
-				Description:  "Direction of traffic.",
+				Description:  "Direction of traffic.  Options are 'ingress' or 'egress.'",
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ingress", "egress"}, false),
@@ -112,7 +112,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 			},
 			"security_group_href": {
 				Type:        schema.TypeString,
-				Description: "ID of parent security group",
+				Description: "Href of parent security group",
 				Required:    true,
 				ForceNew:    true,
 			},
