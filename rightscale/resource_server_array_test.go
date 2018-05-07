@@ -2,7 +2,6 @@ package rightscale
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 
@@ -42,8 +41,8 @@ func TestAccRightScaleServerArray_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccServerArray_basic(serverarrayName, state, deploymentHref, threshold, minCount, maxCount, datacenterHref, datacenterMax, instanceName, cloudHref, imageHref, typeHref, templateHref, subnetHref),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerArrayExists("rightscale_server.test-serverarray", &serverArray),
-					testAccCheckServerArrayHas2Instances(serverArray),
+					testAccCheckServerArrayExists("rightscale_server_array.test_server_array", &serverArray),
+					testAccCheckServerArrayHas2Instances(&serverArray),
 				),
 			},
 		},
@@ -52,7 +51,6 @@ func TestAccRightScaleServerArray_basic(t *testing.T) {
 
 func testAccCheckServerArrayExists(n string, serverArray *cm15.ServerArray) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		log.Printf("CRUNITIC CCCCCCC!!!!!!!!!!!!!!!!!!!")
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -75,7 +73,7 @@ func testAccCheckServerArrayExists(n string, serverArray *cm15.ServerArray) reso
 	}
 }
 
-func testAccCheckServerArrayHas2Instances(serverArray cm15.ServerArray) resource.TestCheckFunc {
+func testAccCheckServerArrayHas2Instances(serverArray *cm15.ServerArray) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if serverArray.InstancesCount != 2 {
 			return fmt.Errorf("ServerArray contains %v servers (should contain 2)", serverArray.InstancesCount)
@@ -148,6 +146,7 @@ resource "rightscale_server_array" "test_server_array" {
 		server_template_href = %q
 		name                 = %q
 		subnet_hrefs         = [%q]
+		associate_public_ip_address = true
 	}
 
 	name            = %q
