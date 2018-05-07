@@ -122,7 +122,7 @@ func testAccSubnet(name string, desc string, cidr string, cloud string, network 
 		   description = %q
 		   cidr_block = %q
 		   cloud_href = %q
-		   network = %q
+		   network_href = %q
 		 }
 `, name, desc, cidr, cloud, network)
 }

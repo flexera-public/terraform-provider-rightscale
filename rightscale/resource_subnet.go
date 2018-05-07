@@ -83,10 +83,6 @@ func resourceSubnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"visibility": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"href": {
 				Type:        schema.TypeString,
 				Description: "href of subnet",
