@@ -1,8 +1,6 @@
 package rightscale
 
 import (
-	"log"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -255,10 +253,8 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 		fields["instance"] = instanceWriteFieldsFromMap(i.([]interface{})[0].(map[string]interface{}))
 	}
 	if dp, ok := d.GetOk("datacenter_policy"); ok {
-		log.Printf("CRUNITIC datacenter_policies is %v", dp)
 		dfs := make([]rsc.Fields, len(dp.([]interface{})))
 		for i, df := range dp.([]interface{}) {
-			log.Printf("CRUNITIC datacenter_policy is %v", df)
 			dfs[i] = datacenterPolicyWriteFields(df.(map[string]interface{}))
 		}
 		fields["datacenter_policy"] = dfs
@@ -274,7 +270,6 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 			fields[f] = v
 		}
 	}
-	log.Printf("CRUNITIC server_array fields: %v", fields)
 	return rsc.Fields{"server_array": fields}
 }
 
@@ -294,7 +289,6 @@ func elasticityParamsWriteFields(d map[string]interface{}) rsc.Fields {
 		fields["alert_specific_params"] = alertSpecificParamsWriteFields(ap.([]interface{})[0].(map[string]interface{}))
 	}
 	if b, ok := d["bounds"]; ok && len(b.([]interface{})) > 0 {
-		log.Printf("CRUNITIC bounds : %v", b)
 		if b.([]interface{})[0] != nil {
 			fields["bounds"] = boundsWriteFields(b.([]interface{})[0].(map[string]interface{}))
 		} else {
@@ -335,12 +329,10 @@ func alertSpecificParamsWriteFields(d map[string]interface{}) rsc.Fields {
 
 func boundsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
-	log.Printf("CRUNITIC boundsWrite d: %v", d)
 	for _, f := range []string{
 		"min_count", "max_count",
 	} {
 		if v, ok := d[f]; ok {
-			log.Printf("CRUNITIC found value %v", v)
 			fields[f] = v
 		}
 	}
