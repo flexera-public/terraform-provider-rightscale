@@ -92,12 +92,12 @@ func resourceServerArray() *schema.Resource {
 									"max_count": &schema.Schema{
 										Description: "The maximum number of servers that can be operational at the same time in the server array.",
 										Type:        schema.TypeInt,
-										Optional:    true,
+										Required:    true,
 									},
 									"min_count": &schema.Schema{
 										Description: "The minimum number of servers that must be operational at all times in the server array.",
-										Type:        schema.TypeString,
-										Optional:    true,
+										Type:        schema.TypeInt,
+										Required:    true,
 									},
 								},
 							},
@@ -255,8 +255,10 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 		fields["instance"] = instanceWriteFields(i.([]interface{})[0].(*schema.ResourceData))
 	}
 	if dp, ok := d.GetOk("datacenter_policy"); ok {
+		log.Printf("CRUNITIC datacenter_policies is %v", dp)
 		dfs := make([]rsc.Fields, len(dp.([]interface{})))
 		for i, df := range dp.([]interface{}) {
+			log.Printf("CRUNITIC datacenter_policy is %v", df)
 			dfs[i] = datacenterPolicyWriteFields(df.(map[string]interface{}))
 		}
 		fields["datacenter_policy"] = dfs
@@ -274,6 +276,7 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 			fields[f] = v
 		}
 	}
+	log.Printf("CRUNITIC server_array fields: %v", fields)
 	return rsc.Fields{"server_array": fields}
 }
 
@@ -282,25 +285,29 @@ func datacenterPolicyWriteFields(d map[string]interface{}) rsc.Fields {
 	for _, f := range []string{
 		"datacenter_href", "max", "weight",
 	} {
-		fields[f] = d["f"]
+		fields[f] = d[f]
 	}
 	return fields
 }
 
 func elasticityParamsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
-	log.Printf("CRUNITIC alert_specific_params %T : %v", d["alert_specific_params"], d["alert_specific_params"])
 	if ap, ok := d["alert_specific_params"]; ok && len(ap.([]interface{})) > 0 {
 		fields["alert_specific_params"] = alertSpecificParamsWriteFields(ap.([]interface{})[0].(*schema.ResourceData))
 	}
 	if b, ok := d["bounds"]; ok && len(b.([]interface{})) > 0 {
-		if fields["bounds"] != nil {
+		log.Printf("CRUNITIC bounds : %v", b)
+		if b.([]interface{})[0] != nil {
 			fields["bounds"] = boundsWriteFields(b.([]interface{})[0].(map[string]interface{}))
+		} else {
+			fields["bounds"] = rsc.Fields{}
 		}
 	}
 	if p, ok := d["pacing"]; ok && len(p.([]interface{})) > 0 {
-		if fields["pacing"] != nil {
+		if p.([]interface{})[0] != nil {
 			fields["pacing"] = pacingWriteFields(p.([]interface{})[0].(map[string]interface{}))
+		} else {
+			fields["pacing"] = rsc.Fields{}
 		}
 	}
 	if q, ok := d["queue_specific_params"]; ok && len(q.([]interface{})) > 0 {
@@ -330,10 +337,12 @@ func alertSpecificParamsWriteFields(d *schema.ResourceData) rsc.Fields {
 
 func boundsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
+	log.Printf("CRUNITIC boundsWrite d: %v", d)
 	for _, f := range []string{
 		"min_count", "max_count",
 	} {
 		if v, ok := d[f]; ok {
+			log.Printf("CRUNITIC found value %v", v)
 			fields[f] = v
 		}
 	}
