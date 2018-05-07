@@ -129,7 +129,3 @@ The following arguments are supported:
 ## Attribute Reference
 
 * `links` - Hrefs of related API resources
-
-
-
-
