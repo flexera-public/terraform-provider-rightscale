@@ -17,14 +17,15 @@ var testAccProvider *schema.Provider
 var testString string
 
 var envVars = map[string]string{
-	"cred":         "RIGHTSCALE_API_TOKEN",
-	"project":      "RIGHTSCALE_PROJECT_ID",
-	"cloud":        "RIGHTSCALE_CLOUD_HREF",
-	"instanceType": "RIGHTSCALE_INSTANCE_TYPE_HREF",
-	"image":        "RIGHTSCALE_IMAGE_HREF",
-	"template":     "RIGHTSCALE_TEMPLATE_HREF",
-	"deployment":   "RIGHTSCALE_DEPLOYMENT_HREF",
-	"network":      "RIGHTSCALE_NETWORK_HREF",
+	"cred":          "RIGHTSCALE_API_TOKEN",
+	"project":       "RIGHTSCALE_PROJECT_ID",
+	"cloud":         "RIGHTSCALE_CLOUD_HREF",
+	"instanceType":  "RIGHTSCALE_INSTANCE_TYPE_HREF",
+	"image":         "RIGHTSCALE_IMAGE_HREF",
+	"template":      "RIGHTSCALE_TEMPLATE_HREF",
+	"deployment":    "RIGHTSCALE_DEPLOYMENT_HREF",
+	"network":       "RIGHTSCALE_NETWORK_HREF",
+	"securityGroup": "RIGHTSCALE_SECURITY_GROUP_HREF",
 }
 
 func init() {
@@ -98,9 +99,14 @@ func getTestDeploymentFromEnv() string {
 	return envSearch(envVars["deployment"])
 }
 
-// getNetworkFromEnv returns the network href environment variable.
+// getTestNetworkFromEnv returns the network href environment variable.
 func getTestNetworkFromEnv() string {
 	return envSearch(envVars["network"])
+}
+
+// getTestSecurityGroupFromEnv returns the security group href from environment variable.
+func getTestSecurityGroupFromEnv() string {
+	return envSearch(envVars["securityGroup"])
 }
 
 func getHrefFromID(id string) string {
