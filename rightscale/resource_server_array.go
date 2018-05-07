@@ -215,7 +215,7 @@ func resourceServerArray() *schema.Resource {
 				Description: "server array instance details",
 				Type:        schema.TypeList,
 				MaxItems:    1,
-				Optional:    true,
+				Required:    true,
 				Elem:        resourceInstance(),
 			},
 			"name": &schema.Schema{
@@ -252,7 +252,7 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 		"state":      d.Get("state"),
 	}
 	if i, ok := d.GetOk("instance"); ok {
-		fields["instance"] = instanceWriteFields(i.([]interface{})[0].(*schema.ResourceData))
+		fields["instance"] = instanceWriteFieldsFromMap(i.([]interface{})[0].(map[string]interface{}))
 	}
 	if dp, ok := d.GetOk("datacenter_policy"); ok {
 		log.Printf("CRUNITIC datacenter_policies is %v", dp)
@@ -266,9 +266,7 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 	if dp, ok := d.GetOk("elasticity_params"); ok {
 		fields["elasticity_params"] = elasticityParamsWriteFields(dp.([]interface{})[0].(map[string]interface{}))
 	}
-	if i, ok := d.GetOk("instance"); ok {
-		fields["instance"] = instanceWriteFields(i.([]interface{})[0].(*schema.ResourceData))
-	}
+
 	for _, f := range []string{
 		"deployment_href", "description", "optimized",
 	} {
@@ -293,7 +291,7 @@ func datacenterPolicyWriteFields(d map[string]interface{}) rsc.Fields {
 func elasticityParamsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
 	if ap, ok := d["alert_specific_params"]; ok && len(ap.([]interface{})) > 0 {
-		fields["alert_specific_params"] = alertSpecificParamsWriteFields(ap.([]interface{})[0].(*schema.ResourceData))
+		fields["alert_specific_params"] = alertSpecificParamsWriteFields(ap.([]interface{})[0].(map[string]interface{}))
 	}
 	if b, ok := d["bounds"]; ok && len(b.([]interface{})) > 0 {
 		log.Printf("CRUNITIC bounds : %v", b)
@@ -323,12 +321,12 @@ func elasticityParamsWriteFields(d map[string]interface{}) rsc.Fields {
 	return fields
 }
 
-func alertSpecificParamsWriteFields(d *schema.ResourceData) rsc.Fields {
+func alertSpecificParamsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
 	for _, f := range []string{
 		"decision_threshold", "voters_tag_predicate",
 	} {
-		if v, ok := d.GetOk(f); ok {
+		if v, ok := d[f]; ok {
 			fields[f] = v
 		}
 	}

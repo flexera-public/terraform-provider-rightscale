@@ -1,6 +1,8 @@
 package rightscale
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -381,4 +383,26 @@ func instanceWriteFields(d *schema.ResourceData) rsc.Fields {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
 	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
+}
+
+func instanceWriteFieldsFromMap(d map[string]interface{}) rsc.Fields {
+	fields := rsc.Fields{}
+	for _, f := range []string{
+		"associate_public_ip_address", "datacenter_href",
+		"deployment_href", "image_href", "instance_type_href",
+		"ip_forwarding_enabled", "kernel_image_href", "name",
+		"placement_group_href", "ramdisk_image_href",
+		"security_group_hrefs", "ssh_key_href", "subnet_hrefs",
+		"user_data", "server_template_href", "cloud_href",
+	} {
+		if v, ok := d[f]; ok {
+			log.Printf("CRUNITIC server_array -> instance field: %v value: %v", f, v)
+			fields[f] = v
+		}
+	}
+	if a, ok := d["cloud_specific_attributes"]; ok && len(a.([]interface{})) > 0 {
+		log.Printf("CRUNITIC a: %v len: %v", a, len(a.([]interface{})))
+		fields["cloud_specific_attributes"] = a.([]interface{})[0]
+	}
+	return fields
 }
