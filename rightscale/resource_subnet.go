@@ -8,6 +8,7 @@ import (
 // Example:
 //
 // resource "rightscale_subnet" "aws-us-east-1d" {
+//     name = "subnet-aws-us-east-1d"
 //     cloud_href = "$[data.rightscale_cloud.us-east.href}"
 //     network_href = "${rightscale_network.aws-us-east-devops-vpc.href}"
 //     description = "Subnet for aws us-east-1d for aws-us-east-devops vpc"

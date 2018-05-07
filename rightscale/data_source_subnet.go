@@ -7,11 +7,11 @@ import (
 
 // Example:
 //
-// data "rightscale_subnet" "ssh" {
-//   filter {
-//     name = "infra"
-//   }
+// data "rightscale_subnet" "infrastructure" {
 //   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+//   filter {
+//     name = "infrastructure"
+//   }
 // }
 
 func dataSourceSubnet() *schema.Resource {
