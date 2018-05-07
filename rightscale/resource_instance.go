@@ -1,8 +1,6 @@
 package rightscale
 
 import (
-	"log"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -396,12 +394,10 @@ func instanceWriteFieldsFromMap(d map[string]interface{}) rsc.Fields {
 		"user_data", "server_template_href", "cloud_href",
 	} {
 		if v, ok := d[f]; ok {
-			log.Printf("CRUNITIC server_array -> instance field: %v value: %v", f, v)
 			fields[f] = v
 		}
 	}
 	if a, ok := d["cloud_specific_attributes"]; ok && len(a.([]interface{})) > 0 {
-		log.Printf("CRUNITIC a: %v len: %v", a, len(a.([]interface{})))
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
 	return fields
