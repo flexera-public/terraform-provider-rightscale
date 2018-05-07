@@ -65,7 +65,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 			},
 			"priority": {
 				Type:        schema.TypeInt,
-				Description: "Lower takes precedence. Supported by AzureRM cloud only.",
+				Description: "Lower takes precedence. Supported by security group rules created in Microsoft Azure only.",
 				Optional:    true,
 				ForceNew:    true,
 			},
@@ -129,7 +129,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 			},
 			"href": {
 				Type:        schema.TypeString,
-				Description: "href of security group rule",
+				Description: "Href of security group rule",
 				Computed:    true,
 			},
 		},
@@ -144,7 +144,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, m interface{}) erro
 	}
 	for k, v := range res.Fields {
 		// for some reason the api requires 'cidr_ips' for source_type, but returns 'cidr' in the response.
-		if k == "source_type" {
+		if k == "source_type" && v == "cidr" {
 			d.Set(k, "cidr_ips")
 		} else {
 			d.Set(k, v)
@@ -169,7 +169,7 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, m interface{}) error 
 	}
 	for k, v := range res.Fields {
 		// for some reason the api requires 'cidr_ips' for source_type, but returns 'cidr' in the response.
-		if k == "source_type" {
+		if k == "source_type" && v == "cidr" {
 			d.Set(k, "cidr_ips")
 		} else {
 			d.Set(k, v)

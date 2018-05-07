@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_security_group_rule
 
-Use this resource to create, update or destroy rightscale [security group roles](http://reference.rightscale.com/api1.5/resources/ResourceSecurityGroupRules.html).
+Use this resource to create, update or destroy rightscale [security group rules](http://reference.rightscale.com/api1.5/resources/ResourceSecurityGroupRules.html).
 
 ## Example Usage - Create a security group rule
 
@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `direction` - (Optional) Direction of traffic to apply rule against.  Options are 'ingress' or 'egress'.
 
-* `priority` - (Optional) Lower takes precedence. Supported by AzureRM cloud only.
+* `priority` - (Optional) Lower takes precedence. Supported by security group rules created in Microsoft Azure only.
 
 ## Attributes Reference
 
