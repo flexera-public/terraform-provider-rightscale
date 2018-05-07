@@ -255,7 +255,7 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 	if dp, ok := d.GetOk("datacenter_policy"); ok {
 		dfs := make([]rsc.Fields, len(dp.([]interface{})))
 		for i, df := range dp.([]interface{}) {
-			dfs[i] = datacenterPolicyWriteFields(df.(*schema.ResourceData))
+			dfs[i] = datacenterPolicyWriteFields(df.(map[string]interface{}))
 		}
 		fields["datacenter_policy"] = dfs
 	}
@@ -275,12 +275,12 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 	return rsc.Fields{"server_array": fields}
 }
 
-func datacenterPolicyWriteFields(d *schema.ResourceData) rsc.Fields {
+func datacenterPolicyWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
 	for _, f := range []string{
 		"datacenter_href", "max", "weight",
 	} {
-		fields[f] = d.Get(f)
+		fields[f] = d["f"]
 	}
 	return fields
 }
