@@ -78,48 +78,48 @@ func resourceServerArray() *schema.Resource {
 										Type:        schema.TypeString,
 										Optional:    true,
 									},
-									"bounds": &schema.Schema{
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"max_count": &schema.Schema{
-													Description: "The maximum number of servers that can be operational at the same time in the server array.",
-													Type:        schema.TypeInt,
-													Optional:    true,
-												},
-												"min_count": &schema.Schema{
-													Description: "The minimum number of servers that must be operational at all times in the server array.",
-													Type:        schema.TypeString,
-													Optional:    true,
-												},
-											},
-										},
+								},
+							},
+						},
+						"bounds": &schema.Schema{
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_count": &schema.Schema{
+										Description: "The maximum number of servers that can be operational at the same time in the server array.",
+										Type:        schema.TypeInt,
+										Optional:    true,
 									},
-									"pacing": &schema.Schema{
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"resize_calm_time": &schema.Schema{
-													Description: "The time (in minutes) on how long you want to wait before you repeat another action.",
-													Type:        schema.TypeInt,
-													Optional:    true,
-												},
-												"resize_down_by": &schema.Schema{
-													Description: "The number of servers to scale down by.",
-													Type:        schema.TypeInt,
-													Optional:    true,
-												},
-												"resize_up_by": &schema.Schema{
-													Description: "The number of servers to scale up by.",
-													Type:        schema.TypeInt,
-													Optional:    true,
-												},
-											},
-										},
+									"min_count": &schema.Schema{
+										Description: "The minimum number of servers that must be operational at all times in the server array.",
+										Type:        schema.TypeString,
+										Optional:    true,
+									},
+								},
+							},
+						},
+						"pacing": &schema.Schema{
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resize_calm_time": &schema.Schema{
+										Description: "The time (in minutes) on how long you want to wait before you repeat another action.",
+										Type:        schema.TypeInt,
+										Optional:    true,
+									},
+									"resize_down_by": &schema.Schema{
+										Description: "The number of servers to scale down by.",
+										Type:        schema.TypeInt,
+										Optional:    true,
+									},
+									"resize_up_by": &schema.Schema{
+										Description: "The number of servers to scale up by.",
+										Type:        schema.TypeInt,
+										Optional:    true,
 									},
 								},
 							},
