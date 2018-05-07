@@ -311,7 +311,7 @@ func elasticityParamsWriteFields(d map[string]interface{}) rsc.Fields {
 	if q, ok := d["queue_specific_params"]; ok && len(q.([]interface{})) > 0 {
 		fields["queue_specific_params"] = queueSpecificParamsWriteFields(q.([]interface{})[0].(*schema.ResourceData))
 	}
-	if s, ok := d["schedule"]; ok {
+	if s, ok := d["schedule"]; ok && len(s.([]interface{})) > 0 {
 		sf := make([]rsc.Fields, len(s.([]interface{})))
 		for i, sched := range s.([]interface{}) {
 			sf[i] = scheduleWriteFields(sched.(map[string]interface{}))
