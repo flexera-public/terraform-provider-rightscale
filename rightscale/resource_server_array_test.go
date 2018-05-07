@@ -22,7 +22,7 @@ func TestAccRightScaleServerArray_basic(t *testing.T) {
 		instanceName    = "terraform-test-instance-" + testString + "-" + acctest.RandString(10)
 		state           = "enabled"
 		threshold       = "75"
-		minCount        = "1"
+		minCount        = "2"
 		maxCount        = "2"
 		datacenterMax   = "4"
 		datacenterHref  = getTestDatacenterFromEnv()
@@ -31,6 +31,7 @@ func TestAccRightScaleServerArray_basic(t *testing.T) {
 		cloudHref       = getTestCloudFromEnv()
 		templateHref    = getTestTemplateFromEnv()
 		deploymentHref  = getTestDeploymentFromEnv()
+		subnetHref      = getTestSubnetFromEnv()
 		serverArray     cm15.ServerArray
 	)
 	resource.Test(t, resource.TestCase{
@@ -39,9 +40,10 @@ func TestAccRightScaleServerArray_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServerArrayDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccServerArray_basic(serverarrayName, state, deploymentHref, threshold, minCount, maxCount, datacenterHref, datacenterMax, instanceName, cloudHref, imageHref, typeHref, templateHref),
+				Config: testAccServerArray_basic(serverarrayName, state, deploymentHref, threshold, minCount, maxCount, datacenterHref, datacenterMax, instanceName, cloudHref, imageHref, typeHref, templateHref, subnetHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerArrayExists("rightscale_server.test-serverarray", &serverArray),
+					testAccCheckServerArrayHas2Instances(serverArray),
 				),
 			},
 		},
@@ -68,6 +70,16 @@ func testAccCheckServerArrayExists(n string, serverArray *cm15.ServerArray) reso
 		}
 
 		*serverArray = *found
+
+		return nil
+	}
+}
+
+func testAccCheckServerArrayHas2Instances(serverArray cm15.ServerArray) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if serverArray.InstancesCount != 2 {
+			return fmt.Errorf("ServerArray contains %v servers (should contain 2)", serverArray.InstancesCount)
+		}
 
 		return nil
 	}
@@ -102,7 +114,7 @@ func testAccCheckServerArrayDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccServerArray_basic(serverarrayName string, state string, deploymentHref string, threshold string, minCount string, maxCount string, datacenterHref string, datacenterMax string, instanceName string, cloudHref string, imageHref string, typeHref string, templateHref string) string {
+func testAccServerArray_basic(serverarrayName string, state string, deploymentHref string, threshold string, minCount string, maxCount string, datacenterHref string, datacenterMax string, instanceName string, cloudHref string, imageHref string, typeHref string, templateHref string, subnetHref string) string {
 	return fmt.Sprintf(`
 resource "rightscale_server_array" "test_server_array" {
 	array_type = "alert"
@@ -135,11 +147,12 @@ resource "rightscale_server_array" "test_server_array" {
 		instance_type_href   = %q
 		server_template_href = %q
 		name                 = %q
+		subnet_hrefs         = [%q]
 	}
 
 	name            = %q
 	state           = %q
 	deployment_href = %q
 	}
-`, datacenterHref, datacenterMax, threshold, minCount, maxCount, cloudHref, imageHref, typeHref, templateHref, instanceName, serverarrayName, state, deploymentHref)
+`, datacenterHref, datacenterMax, threshold, minCount, maxCount, cloudHref, imageHref, typeHref, templateHref, instanceName, subnetHref, serverarrayName, state, deploymentHref)
 }
