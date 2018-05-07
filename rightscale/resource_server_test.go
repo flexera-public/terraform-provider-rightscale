@@ -24,6 +24,7 @@ func TestAccRightScaleServer_basic(t *testing.T) {
 		cloudHref      = getTestCloudFromEnv()
 		templateHref   = getTestTemplateFromEnv()
 		deploymentHref = getTestDeploymentFromEnv()
+		subnetHref     = getTestSubnetFromEnv()
 		server         cm15.Server
 	)
 	resource.Test(t, resource.TestCase{
@@ -32,7 +33,7 @@ func TestAccRightScaleServer_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServerDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccServer_basic(serverName, instanceName, cloudHref, imageHref, typeHref, deploymentHref, templateHref),
+				Config: testAccServer_basic(serverName, instanceName, cloudHref, imageHref, typeHref, deploymentHref, templateHref, subnetHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists("rightscale_server.test-server", &server),
 				),
@@ -94,7 +95,7 @@ func testAccCheckServerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccServer_basic(serverName string, instanceName string, cloudHref string, imageHref string, typeHref string, deploymentHref string, templateHref string) string {
+func testAccServer_basic(serverName string, instanceName string, cloudHref string, imageHref string, typeHref string, deploymentHref string, templateHref string, subnetHref string) string {
 	return fmt.Sprintf(`
 resource "rightscale_server" "test-server" {
   name                   = %q
@@ -104,8 +105,9 @@ resource "rightscale_server" "test-server" {
     image_href           = %q
     instance_type_href   = %q
     name                 = %q
-    server_template_href = %q
+	server_template_href = %q
+	subnet_hrefs         = [%q]
   }
 }
-  `, serverName, deploymentHref, cloudHref, imageHref, typeHref, instanceName, templateHref)
+  `, serverName, deploymentHref, cloudHref, imageHref, typeHref, instanceName, templateHref, subnetHref)
 }

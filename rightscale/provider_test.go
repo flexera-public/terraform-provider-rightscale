@@ -26,6 +26,7 @@ var envVars = map[string]string{
 	"deployment":    "RIGHTSCALE_DEPLOYMENT_HREF",
 	"network":       "RIGHTSCALE_NETWORK_HREF",
 	"securityGroup": "RIGHTSCALE_SECURITY_GROUP_HREF",
+	"subnet":        "RIGHTSCALE_SUBNET_HREF",
 }
 
 func init() {
@@ -102,6 +103,11 @@ func getTestDeploymentFromEnv() string {
 // getTestNetworkFromEnv returns the network href environment variable.
 func getTestNetworkFromEnv() string {
 	return envSearch(envVars["network"])
+}
+
+// getTestSubnetFromEnv returns the subnet href environment variable.
+func getTestSubnetFromEnv() string {
+	return envSearch(envVars["subnet"])
 }
 
 // getTestSecurityGroupFromEnv returns the security group href from environment variable.
