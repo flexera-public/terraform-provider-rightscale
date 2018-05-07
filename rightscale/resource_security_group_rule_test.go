@@ -32,7 +32,7 @@ func TestAccRightScaleSecurityRuleGroup(t *testing.T) {
 				Config: testAccSecurityGroupRule(securityGroup, cidrIps),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("rightscale_security_group_rule.test_sg_rule", &depl),
-					testAccCheckSecurityGroupRuleCIDR(&depl, securityGroupDescription),
+					testAccCheckSecurityGroupRuleCIDR(&depl, cidrIps),
 				),
 			},
 		},
