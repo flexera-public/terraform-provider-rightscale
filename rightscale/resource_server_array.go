@@ -1,6 +1,8 @@
 package rightscale
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -260,7 +262,7 @@ func serverArrayWriteFields(d *schema.ResourceData) rsc.Fields {
 		fields["datacenter_policy"] = dfs
 	}
 	if dp, ok := d.GetOk("elasticity_params"); ok {
-		fields["elasticity_params"] = elasticityParamsWriteFields(dp.([]interface{})[0].(*schema.ResourceData))
+		fields["elasticity_params"] = elasticityParamsWriteFields(dp.([]interface{})[0].(map[string]interface{}))
 	}
 	if i, ok := d.GetOk("instance"); ok {
 		fields["instance"] = instanceWriteFields(i.([]interface{})[0].(*schema.ResourceData))
@@ -285,24 +287,29 @@ func datacenterPolicyWriteFields(d map[string]interface{}) rsc.Fields {
 	return fields
 }
 
-func elasticityParamsWriteFields(d *schema.ResourceData) rsc.Fields {
+func elasticityParamsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
-	if ap, ok := d.GetOk("alert_specific_params"); ok {
+	log.Printf("CRUNITIC alert_specific_params %T : %v", d["alert_specific_params"], d["alert_specific_params"])
+	if ap, ok := d["alert_specific_params"]; ok && len(ap.([]interface{})) > 0 {
 		fields["alert_specific_params"] = alertSpecificParamsWriteFields(ap.([]interface{})[0].(*schema.ResourceData))
 	}
-	if b, ok := d.GetOk("bounds"); ok {
-		fields["bounds"] = boundsWriteFields(b.([]interface{})[0].(*schema.ResourceData))
+	if b, ok := d["bounds"]; ok && len(b.([]interface{})) > 0 {
+		if fields["bounds"] != nil {
+			fields["bounds"] = boundsWriteFields(b.([]interface{})[0].(map[string]interface{}))
+		}
 	}
-	if p, ok := d.GetOk("pacing"); ok {
-		fields["pacing"] = pacingWriteFields(p.([]interface{})[0].(*schema.ResourceData))
+	if p, ok := d["pacing"]; ok && len(p.([]interface{})) > 0 {
+		if fields["pacing"] != nil {
+			fields["pacing"] = pacingWriteFields(p.([]interface{})[0].(map[string]interface{}))
+		}
 	}
-	if q, ok := d.GetOk("queue_specific_params"); ok {
+	if q, ok := d["queue_specific_params"]; ok && len(q.([]interface{})) > 0 {
 		fields["queue_specific_params"] = queueSpecificParamsWriteFields(q.([]interface{})[0].(*schema.ResourceData))
 	}
-	if s, ok := d.GetOk("schedule"); ok {
+	if s, ok := d["schedule"]; ok {
 		sf := make([]rsc.Fields, len(s.([]interface{})))
 		for i, sched := range s.([]interface{}) {
-			sf[i] = scheduleWriteFields(sched.(*schema.ResourceData))
+			sf[i] = scheduleWriteFields(sched.(map[string]interface{}))
 		}
 		fields["schedule"] = sf
 	}
@@ -321,24 +328,24 @@ func alertSpecificParamsWriteFields(d *schema.ResourceData) rsc.Fields {
 	return fields
 }
 
-func boundsWriteFields(d *schema.ResourceData) rsc.Fields {
+func boundsWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
 	for _, f := range []string{
 		"min_count", "max_count",
 	} {
-		if v, ok := d.GetOk(f); ok {
+		if v, ok := d[f]; ok {
 			fields[f] = v
 		}
 	}
 	return fields
 }
 
-func pacingWriteFields(d *schema.ResourceData) rsc.Fields {
+func pacingWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
 	for _, f := range []string{
 		"resize_calm_time", "resize_down_by", "resize_up_by",
 	} {
-		if v, ok := d.GetOk(f); ok {
+		if v, ok := d[f]; ok {
 			fields[f] = v
 		}
 	}
@@ -379,12 +386,12 @@ func queueSizeWriteFields(d *schema.ResourceData) rsc.Fields {
 	return fields
 }
 
-func scheduleWriteFields(d *schema.ResourceData) rsc.Fields {
+func scheduleWriteFields(d map[string]interface{}) rsc.Fields {
 	fields := rsc.Fields{}
 	for _, f := range []string{
 		"day", "max_count", "min_count", "time",
 	} {
-		fields[f] = d.Get(f)
+		fields[f] = d[f]
 	}
 	return fields
 }
