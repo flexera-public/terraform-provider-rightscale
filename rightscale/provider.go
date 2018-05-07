@@ -40,6 +40,7 @@ func Provider() terraform.ResourceProvider {
 			"rightscale_multi_cloud_image": dataSourceMultiCloudImage(),
 			"rightscale_network":           dataSourceNetwork(),
 			"rightscale_network_gateway":   dataSourceNetworkGateway(),
+			"rightscale_route_table":       dataSourceRouteTable(),
 			"rightscale_security_group":    dataSourceSecurityGroup(),
 			"rightscale_server":            dataSourceServer(),
 			"rightscale_server_template":   dataSourceServerTemplate(),

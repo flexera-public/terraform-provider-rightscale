@@ -5,6 +5,15 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
+// Example:
+//
+// resource "rightscale_route_table" "my_route_table" {
+//   name        = "my-sweet-route-table"
+//   description = "This is the best route table ever"
+//   cloud_href = "${data.rightscale_cloud.us-oregon.href}"
+//	 network_href = "${rightscale_network.us-oregon-vpc-network.href}"
+// }
+
 func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
@@ -15,22 +24,22 @@ func resourceRouteTable() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_href": &schema.Schema{
-				Description: "ID of cloud in which to create route table",
+				Description: "Href of cloud in which to create route table",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"description": &schema.Schema{
-				Description: "description of route table",
+				Description: "Description of route table",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"name": &schema.Schema{
-				Description: "name of route table",
+				Description: "Name of route table",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"network_href": &schema.Schema{
-				Description: "ID of network in which to create route table",
+				Description: "Href of network in which to create route table",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -52,6 +61,11 @@ func resourceRouteTable() *schema.Resource {
 			"updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"href": {
+				Type:        schema.TypeString,
+				Description: "Href of route table",
+				Computed:    true,
 			},
 		},
 	}
