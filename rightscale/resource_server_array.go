@@ -126,7 +126,7 @@ func resourceServerArray() *schema.Resource {
 						},
 						"queue_specific_params": &schema.Schema{
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
