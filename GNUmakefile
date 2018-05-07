@@ -17,7 +17,7 @@ test: sanitycheck
 		xargs -t -n4 go test $(TESTARGS) -timeout=300s -parallel=4
 
 testacc: sanitycheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -parallel=8
 
 vet:
 	@echo "go vet ."

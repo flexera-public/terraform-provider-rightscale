@@ -18,6 +18,9 @@ func resourceCreateFunc(namespace, typ string, fieldsFunc func(*schema.ResourceD
 		for k, v := range res.Fields {
 			d.Set(k, v)
 		}
+		// Sets 'href' which is rightscale href (for stitching together cm resources IN rightscale) without namespace.
+		d.Set("href", res.Locator.Href)
+		// Sets 'id' which allows terraform to locate the objects created which includes namespace.
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
 		return nil
 	}

@@ -6,6 +6,16 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
+// Example:
+//
+// resource "rightscale_network" "my_network" {
+//   name        = "aws-us-oregon-dev-vpc"
+//   description = "Development vpc network in aws us-oregon"
+//   cloud_href = "/api/clouds/6"
+//	 cidr_block = "192.168.0.0/16"
+//
+// }
+
 func resourceNetwork() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
@@ -28,7 +38,7 @@ func resourceNetwork() *schema.Resource {
 				ForceNew:    true,
 			},
 			"deployment_href": &schema.Schema{
-				Description: "ID of deployment that owns network",
+				Description: "Optional href of deployment that owns the network.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -38,10 +48,11 @@ func resourceNetwork() *schema.Resource {
 				Optional:    true,
 			},
 			"instance_tenancy": &schema.Schema{
-				Description:  "launch policy for AWS instances in the network. Specify 'default' to allow instances to decide their own launch policy. Specify 'dedicated' to force all instances to be launched as 'dedicated'.",
+				Description:  "launch policy for AWS instances in the network. Specify 'dedicated' to force all instances to be launched as 'dedicated'.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
+				Default:      "default",
 				ValidateFunc: validation.StringInSlice([]string{"default", "dedicated"}, false),
 			},
 			"name": &schema.Schema{
@@ -55,11 +66,20 @@ func resourceNetwork() *schema.Resource {
 				Optional:    true,
 			},
 
-			// Read-onyl fields
+			// Read-only fields
 			"links": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 				Computed: true,
+			},
+			"resource_uid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"href": {
+				Type:        schema.TypeString,
+				Description: "href of network",
+				Computed:    true,
 			},
 		},
 	}
@@ -99,6 +119,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	// set ID last so Terraform does not assume the network has been
 	// created until all operations have completed successfully.
 	d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
+	d.Set("href", res.Locator.Href)
 	return nil
 }
 

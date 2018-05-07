@@ -5,6 +5,17 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
+// Example:
+//
+// resource "rightscale_subnet" "aws-us-east-1d" {
+//     name = "subnet-aws-us-east-1d"
+//     cloud_href = "$[data.rightscale_cloud.us-east.href}"
+//     network_href = "${rightscale_network.aws-us-east-devops-vpc.href}"
+//     description = "Subnet for aws us-east-1d for aws-us-east-devops vpc"
+//     cidr_block = "192.168.1.0/24"
+//     datacenter_href = "${data.rightscale_datacenter.ec2_us_east_1d.id}"
+// }
+
 func resourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
@@ -42,7 +53,13 @@ func resourceSubnet() *schema.Resource {
 			"route_table_href": &schema.Schema{
 				Description: "ID of subnet route table",
 				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"cloud_href": {
+				Type:        schema.TypeString,
+				Description: "Href of cloud resource",
 				Required:    true,
+				ForceNew:    true,
 			},
 
 			// Read-only fields
@@ -66,9 +83,10 @@ func resourceSubnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"visibility": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"href": {
+				Type:        schema.TypeString,
+				Description: "href of subnet",
+				Computed:    true,
 			},
 		},
 	}
@@ -95,6 +113,11 @@ func resourceSubnetCreate(d *schema.ResourceData, m interface{}) error {
 		d.Set(k, v)
 	}
 
+	// Sets 'href' which is rightscale href (for stitching together cm resources IN rightscale) without namespace.
+	d.Set("href", res.Locator.Href)
+	// Sets 'id' which allows terraform to locate the objects created which includes namespace.
+	d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
+
 	// then update with default route table if any
 	if rt != "" {
 		d.Set("route_table_href", rt)
@@ -104,10 +127,6 @@ func resourceSubnetCreate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-
-	// set ID last so Terraform does not assume the subnet has been
-	// created until all operations have completed successfully.
-	d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
 	return nil
 }
 
@@ -123,5 +142,5 @@ func subnetWriteFields(d *schema.ResourceData) rsc.Fields {
 			fields[f] = v
 		}
 	}
-	return rsc.Fields{"subnet": fields}
+	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "subnet": fields}
 }
