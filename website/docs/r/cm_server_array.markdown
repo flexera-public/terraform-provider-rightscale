@@ -17,7 +17,7 @@ resource "rightscale_server_array" "frontend_servers_array" {
 	array_type = "alert"
 
 	datacenter_policy = [{
-		datacenter_href = /api/clouds/1234/datacenters/DEOLL9UREJ7TA
+		datacenter_href = "/api/clouds/1234/datacenters/DEOLL9UREJ7TA"
 		max             = 4
 		weight          = 100
 	}]
