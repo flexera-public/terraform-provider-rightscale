@@ -31,9 +31,9 @@ output "us-oregon-devops-subnet-a-aws-href" {
 
 The following arguments are supported:
 
-* `cloud_href` - (Required) Cloud you want to create the subnet in.
+* `cloud_href` - (Required) Href of cloud you want to create the subnet in.
 
-* `network_href` - (Required) ID of network to create subnet in.
+* `network_href` - (Required) Href of network to create subnet in.
 
 * `cidr_block` - (Required) Subnet allocation range in CIDR notation.
 
@@ -41,7 +41,7 @@ The following arguments are supported:
 
 * `description` - (Optional) Subnet description.
 
-* `datacenter_href` - (Optional) Cloud datacenter to assign subnet to.
+* `datacenter_href` - (Optional) Href of cloud datacenter to assign subnet to.
 
 * `route_table_href` - (Optional) Sets the default route table for this subnet, useful if you create the route table with a different resource.
 
