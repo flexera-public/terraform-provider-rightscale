@@ -27,6 +27,7 @@ var envVars = map[string]string{
 	"network":        "RIGHTSCALE_NETWORK_HREF",
 	"securityGroup":  "RIGHTSCALE_SECURITY_GROUP_HREF",
 	"subnet":         "RIGHTSCALE_SUBNET_HREF",
+	"datacenter":    "RIGHTSCALE_DATACENTER_HREF",
 	"routeTable":     "RIGHTSCALE_ROUTE_TABLE_HREF",
 	"networkGateway": "RIGHTSCALE_NETWORK_GATEWAY_HREF",
 }
@@ -85,6 +86,11 @@ func getTestCredsFromEnv() string {
 // getTestCloudFromEnv returns the cloud href environment variable.
 func getTestCloudFromEnv() string {
 	return envSearch(envVars["cloud"])
+}
+
+// getTestDatacenterFromEnv returns the datacenter href environment variable.
+func getTestDatacenterFromEnv() string {
+	return envSearch(envVars["datacenter"])
 }
 
 // getTestInstanceTypeFromEnv returns the instance type href environment variable.
