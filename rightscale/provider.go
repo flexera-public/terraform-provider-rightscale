@@ -56,6 +56,7 @@ func Provider() terraform.ResourceProvider {
 			"rightscale_instance":            resourceInstance(),
 			"rightscale_network":             resourceNetwork(),
 			"rightscale_network_gateway":     resourceNetworkGateway(),
+			"rightscale_route":               resourceRoute(),
 			"rightscale_route_table":         resourceRouteTable(),
 			"rightscale_security_group":      resourceSecurityGroup(),
 			"rightscale_security_group_rule": resourceSecurityGroupRule(),

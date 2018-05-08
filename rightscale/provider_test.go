@@ -17,16 +17,18 @@ var testAccProvider *schema.Provider
 var testString string
 
 var envVars = map[string]string{
-	"cred":          "RIGHTSCALE_API_TOKEN",
-	"project":       "RIGHTSCALE_PROJECT_ID",
-	"cloud":         "RIGHTSCALE_CLOUD_HREF",
-	"instanceType":  "RIGHTSCALE_INSTANCE_TYPE_HREF",
-	"image":         "RIGHTSCALE_IMAGE_HREF",
-	"template":      "RIGHTSCALE_TEMPLATE_HREF",
-	"deployment":    "RIGHTSCALE_DEPLOYMENT_HREF",
-	"network":       "RIGHTSCALE_NETWORK_HREF",
-	"securityGroup": "RIGHTSCALE_SECURITY_GROUP_HREF",
-	"subnet":        "RIGHTSCALE_SUBNET_HREF",
+	"cred":           "RIGHTSCALE_API_TOKEN",
+	"project":        "RIGHTSCALE_PROJECT_ID",
+	"cloud":          "RIGHTSCALE_CLOUD_HREF",
+	"instanceType":   "RIGHTSCALE_INSTANCE_TYPE_HREF",
+	"image":          "RIGHTSCALE_IMAGE_HREF",
+	"template":       "RIGHTSCALE_TEMPLATE_HREF",
+	"deployment":     "RIGHTSCALE_DEPLOYMENT_HREF",
+	"network":        "RIGHTSCALE_NETWORK_HREF",
+	"securityGroup":  "RIGHTSCALE_SECURITY_GROUP_HREF",
+	"subnet":         "RIGHTSCALE_SUBNET_HREF",
+	"routeTable":     "RIGHTSCALE_ROUTE_TABLE_HREF",
+	"networkGateway": "RIGHTSCALE_NETWORK_GATEWAY_HREF",
 }
 
 func init() {
@@ -113,6 +115,16 @@ func getTestSubnetFromEnv() string {
 // getTestSecurityGroupFromEnv returns the security group href from environment variable.
 func getTestSecurityGroupFromEnv() string {
 	return envSearch(envVars["securityGroup"])
+}
+
+// getTestRouteTableFromEnv returns the route table href from environment variable.
+func getTestRouteTableFromEnv() string {
+	return envSearch(envVars["routeTable"])
+}
+
+// getTestNetworkGatewayFromEnv returns the network gateway href from environment variable.
+func getTestNetworkGatewayFromEnv() string {
+	return envSearch(envVars["networkGateway"])
 }
 
 func getHrefFromID(id string) string {
