@@ -10,7 +10,7 @@ import (
 //
 // resource "rightscale_route" "my_route" {
 //   description = "A route to the internet gateway"
-//	 route_table_href = "${rightscale_route_table.my_route_table.href}"
+//   route_table_href = "${rightscale_route_table.my_route_table.href}"
 //   destination_cidr_block = "0.0.0.0/0"
 //   next_hop_type = "network_gateway"
 //   next_hop_href = "${rightscale_network_gateway.my_network_gateway.href}"
@@ -98,11 +98,8 @@ func routeWriteFields(d *schema.ResourceData) rsc.Fields {
 		"destination_cidr_block": d.Get("destination_cidr_block"),
 		"next_hop_type":          d.Get("next_hop_type"),
 	}
-	if desc, ok := d.GetOk("description"); ok {
-		fields["description"] = desc
-	}
 	for _, f := range []string{
-		"next_hop_href", "next_hop_ip", "next_hop_url",
+		"description", "next_hop_href", "next_hop_ip", "next_hop_url",
 	} {
 		if v, ok := d.GetOk(f); ok {
 			fields[f] = v

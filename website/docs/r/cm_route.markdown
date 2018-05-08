@@ -3,12 +3,12 @@ layout: "rightscale"
 page_title: "Rightscale: route"
 sidebar_current: "docs-rightscale-resource-route"
 description: |-
-  Create and maintain a rightscale cloud management route.
+  Create and maintain a RightScale route.
 ---
 
 # rightscale_route
 
-Use this resource to create, update or destroy rightscale [routes](http://reference.rightscale.com/api1.5/resources/ResourceRoutes.html).
+Use this resource to create, update or destroy RightScale [routes](http://reference.rightscale.com/api1.5/resources/ResourceRoutes.html).
 
 ## Example Usage
 
@@ -46,7 +46,7 @@ The following attributes are exported:
 
 * `href` - Href of the route. 
 
-* `resource_uid` - Cloud resource_uid.
+* `resource_uid` - Route resource_uid.
 
 * `links` - Hrefs of related API resources.
 
