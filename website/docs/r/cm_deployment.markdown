@@ -3,12 +3,12 @@ layout: "rightscale"
 page_title: "Rightscale: deployment"
 sidebar_current: "docs-rightscale-resource-deployment"
 description: |-
-  Create and maintain a rightscale cloud management deployment.
+  Create and maintain a RightScale deployment.
 ---
 
 # rightscale_deployment
 
-Use this resource to create, update or destroy rightscale [deployments](http://docs.rightscale.com/cm/dashboard/manage/deployments/index.html) in cloud management.
+Use this resource to create, update or destroy RightScale [deployments](http://docs.rightscale.com/cm/dashboard/manage/deployments/index.html) in cloud management.
 
 ## Example Usage
 
@@ -31,7 +31,7 @@ The following arguments are supported:
 
 * `description` - (Optional) Deployment description.
 
-* `resource_group_href` - (Optional) ID of the Windows Azure Resource Group attached to the deployment.
+* `resource_group_href` - (Optional) Href of the Windows Azure Resource Group attached to the deployment.
 
 * `locked` - (Optional) Set to true to lock the deployment.
 

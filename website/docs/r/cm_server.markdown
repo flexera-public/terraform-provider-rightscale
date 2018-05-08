@@ -3,12 +3,12 @@ layout: "rightscale"
 page_title: "Rightscale: server"
 sidebar_current: "docs-rightscale-datasource-server"
 description: |-
-  Create and maintain a server 
+  Create and maintain a RightScale server 
 ---
 
 # rightscale_server
 
-Use this resource to create, update or destroy a server 
+Use this resource to create, update or destroy a RightScale server 
 
 ## Example Usage : Basic configuration of a server resource
 

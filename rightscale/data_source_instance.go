@@ -14,14 +14,14 @@ import (
 //   filter {
 //     resource_uid = "vpc-c31ee987"
 //   }
-//   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+//   cloud_href = "${data.rightscale_cloud.ec2_us_east_1.id}"
 // }
 //
 // data "rightscale_instance" "worker_2" {
 //   filter {
 //     name = "Worker #2"
 //   }
-//   server_array = ${data.rightscale_server_array.workers}
+//   server_array = "${data.rightscale_server_array.workers}"
 // }
 
 func dataSourceInstance() *schema.Resource {
@@ -125,10 +125,11 @@ func dataSourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"cloud_href": {
-				Type:        schema.TypeString,
-				Description: "ID of instance cloud resource, exclusive with 'server_array_href'",
-				Optional:    true,
-				ForceNew:    true,
+				Type:          schema.TypeString,
+				Description:   "ID of instance cloud resource, exclusive with 'server_array_href'",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"server_array_href"},
 			},
 			"cloud_specific_attributes": instanceCloudAttributes,
 			"created_at": {
@@ -167,10 +168,11 @@ func dataSourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"server_array_href": {
-				Type:        schema.TypeString,
-				Description: "ID of instance server array resource, exclusive with 'cloud_href'",
-				Optional:    true,
-				ForceNew:    true,
+				Type:          schema.TypeString,
+				Description:   "ID of instance server array resource, exclusive with 'cloud_href'",
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"cloud_href"},
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -192,7 +194,7 @@ func resourceInstanceRead(d *schema.ResourceData, m interface{}) error {
 	} else if array, ok := d.GetOk("server_array_href"); ok {
 		loc = &rsc.Locator{Namespace: "rs_cm", Href: array.(string)}
 	} else {
-		return fmt.Errorf("instance data source must specify one of 'cloud' or 'server_array'")
+		return fmt.Errorf("instance data source must specify one of 'cloud_href' or 'server_array_href'")
 	}
 	res, err := client.List(loc, "instances", cmFilters(d))
 	if err != nil {

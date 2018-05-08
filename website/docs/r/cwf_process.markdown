@@ -3,7 +3,7 @@ layout: "rightscale"
 page_title: "Rightscale: CWF Process"
 sidebar_current: "docs-rightscale-resource-cwf_process"
 description: |-
-  Create and maintain a rightscale CloudWorkFlow process.
+  Create and maintain a RightScale CloudWorkFlow process.
 ---
 
 # rightscale_cwf_process

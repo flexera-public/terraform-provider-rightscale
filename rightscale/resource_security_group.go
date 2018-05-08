@@ -23,30 +23,33 @@ func resourceSecurityGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cloud_href": {
 				Type:        schema.TypeString,
-				Description: "ID of the security group cloud",
+				Description: "href of the security group cloud",
 				Required:    true,
 				ForceNew:    true,
 			},
 			"deployment_href": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "Optional href of deployment that owns the security group",
+				Optional:    true,
+				ForceNew:    true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "description of the security group",
+				Optional:    true,
+				ForceNew:    true,
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Description: "ID of the security group cloud",
+				Description: "name of the security group",
 				Required:    true,
 				ForceNew:    true,
 			},
 			"network_href": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "href of the network to create the security group in",
+				Required:    true,
+				ForceNew:    true,
 			},
 
 			// Read-only fields
@@ -59,21 +62,27 @@ func resourceSecurityGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 				Computed: true,
 			},
+			"href": {
+				Type:        schema.TypeString,
+				Description: "href of security group",
+				Computed:    true,
+			},
 		},
 	}
 }
 
 func securityGroupWriteFields(d *schema.ResourceData) rsc.Fields {
 	fields := rsc.Fields{
-		"cloud_href": d.Get("cloud_href"),
-		"name":       d.Get("name"),
+		"cloud_href":   d.Get("cloud_href"),
+		"name":         d.Get("name"),
+		"network_href": d.Get("network_href"),
 	}
 	for _, f := range []string{
-		"deployment_href", "description", "network_href",
+		"deployment_href", "description",
 	} {
 		if v, ok := d.GetOk(f); ok {
 			fields[f] = v
 		}
 	}
-	return rsc.Fields{"security_group": fields}
+	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "security_group": fields}
 }

@@ -7,24 +7,18 @@ import (
 
 // Example:
 //
-// data "rightscale_security_group" "ssh" {
-//   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+// data "rightscale_route_table" "infra_vpc_route_table" {
 //   filter {
-//     resource_uid = "sg-c31ee987"
+//     name = "rtb-123456"
+//     network_href = ${data.rightscale_network.ec2_us_east_vpc.id}
 //   }
 // }
 
-func dataSourceSecurityGroup() *schema.Resource {
+func dataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: resourceSecurityGroupRead,
+		Read: resourceRouteTableRead,
 
 		Schema: map[string]*schema.Schema{
-			"cloud_href": {
-				Type:        schema.TypeString,
-				Description: "ID of the security group cloud",
-				Required:    true,
-				ForceNew:    true,
-			},
 			"filter": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -34,25 +28,19 @@ func dataSourceSecurityGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
-							Description: "name of security group, uses partial match",
+							Description: "name of route table, uses partial match",
 							Optional:    true,
 							ForceNew:    true,
 						},
-						"deployment_href": {
+						"cloud_href": {
 							Type:        schema.TypeString,
-							Description: "ID of deployment resource that owns security group",
-							Optional:    true,
-							ForceNew:    true,
-						},
-						"resource_uid": {
-							Type:        schema.TypeString,
-							Description: "cloud ID of security group, e.g. 'sg-c31ee987'",
+							Description: "Href of the route table's cloud",
 							Optional:    true,
 							ForceNew:    true,
 						},
 						"network_href": {
 							Type:        schema.TypeString,
-							Description: "ID of the security group network resource",
+							Description: "Href of the route table's network",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -70,6 +58,11 @@ func dataSourceSecurityGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 				Computed: true,
 			},
+			"routes": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeMap},
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,12 +75,11 @@ func dataSourceSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceSecurityGroupRead(d *schema.ResourceData, m interface{}) error {
+func resourceRouteTableRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(rsc.Client)
-	cloud := d.Get("cloud_href").(string)
-	loc := &rsc.Locator{Namespace: "rs_cm", Href: cloud}
+	loc := &rsc.Locator{Namespace: "rs_cm", Type: "route_tables"}
 
-	res, err := client.List(loc, "security_groups", cmFilters(d))
+	res, err := client.List(loc, "", cmFilters(d))
 	if err != nil {
 		return err
 	}

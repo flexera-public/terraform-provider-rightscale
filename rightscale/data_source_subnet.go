@@ -7,11 +7,11 @@ import (
 
 // Example:
 //
-// data "rightscale_subnet" "ssh" {
-//   filter {
-//     name = "infra"
-//   }
+// data "rightscale_subnet" "infrastructure" {
 //   cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+//   filter {
+//     name = "infrastructure"
+//   }
 // }
 
 func dataSourceSubnet() *schema.Resource {
@@ -34,7 +34,7 @@ func dataSourceSubnet() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
-							Description: "name of subnet, uses partial match",
+							Description: "Name of subnet, uses partial match",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -46,19 +46,19 @@ func dataSourceSubnet() *schema.Resource {
 						},
 						"datacenter_href": {
 							Type:        schema.TypeString,
-							Description: "ID of the subnet datacenter resource",
+							Description: "Href of the subnet datacenter resource",
 							Optional:    true,
 							ForceNew:    true,
 						},
 						"instance_href": {
 							Type:        schema.TypeString,
-							Description: "ID of instance resource attached to subnet",
+							Description: "Href of instance resource attached to subnet",
 							Optional:    true,
 							ForceNew:    true,
 						},
 						"network_href": {
 							Type:        schema.TypeString,
-							Description: "ID of network resource that owns subnet",
+							Description: "Href of network resource that owns subnet",
 							Optional:    true,
 							ForceNew:    true,
 						},

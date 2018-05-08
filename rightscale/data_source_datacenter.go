@@ -21,7 +21,7 @@ func dataSourceDatacenter() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cloud_href": {
 				Type:        schema.TypeString,
-				Description: "ID of datacenter cloud resource",
+				Description: "Href of datacenter cloud resource",
 				Required:    true,
 				ForceNew:    true,
 			},

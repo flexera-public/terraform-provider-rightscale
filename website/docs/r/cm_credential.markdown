@@ -3,12 +3,12 @@ layout: "rightscale"
 page_title: "Rightscale: credential"
 sidebar_current: "docs-rightscale-resource-credential"
 description: |-
-  Create and maintain a rightscale credential resource.
+  Create and maintain a RightScale credential resource.
 ---
 
 # rightscale_credential
 
-Use this resource to create, read, update or destroy rightscale credential objects.
+Use this resource to create, read, update or destroy RightScale credential objects.
 
 ## Example Usage
 

@@ -50,7 +50,7 @@ func resourceDeployment() *schema.Resource {
 				Description:  "routing scope for tags for servers in the deployment",
 				Type:         schema.TypeString,
 				Optional:     true,
-				InputDefault: "deployment",
+				Default:      "deployment",
 				ValidateFunc: validation.StringInSlice([]string{"account", "deployment"}, false),
 			},
 

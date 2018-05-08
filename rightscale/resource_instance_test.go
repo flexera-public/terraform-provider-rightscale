@@ -21,6 +21,7 @@ func TestAccRightScaleInstance_basic(t *testing.T) {
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
+		subnetHref   = getTestSubnetFromEnv()
 		inst         cm15.Instance
 	)
 	resource.Test(t, resource.TestCase{
@@ -29,7 +30,7 @@ func TestAccRightScaleInstance_basic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstance_basic(instanceName, cloudHref, imageHref, typeHref),
+				Config: testAccInstance_basic(instanceName, cloudHref, subnetHref, imageHref, typeHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("rightscale_instance.test-instance", &inst),
 				),
@@ -46,6 +47,7 @@ func TestAccRightScaleInstance_userdata(t *testing.T) {
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
+		subnetHref   = getTestSubnetFromEnv()
 		userData     = "UserData" + acctest.RandString(10)
 		inst         cm15.Instance
 	)
@@ -55,7 +57,7 @@ func TestAccRightScaleInstance_userdata(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstance_userdata(instanceName, cloudHref, imageHref, typeHref, userData),
+				Config: testAccInstance_userdata(instanceName, cloudHref, subnetHref, imageHref, typeHref, userData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("rightscale_instance.test-instance", &inst),
 					testAccCheckInstanceUserdata(userData, &inst),
@@ -73,6 +75,7 @@ func TestAccRightScaleInstance_locked(t *testing.T) {
 		imageHref    = getTestImageFromEnv()
 		typeHref     = getTestInstanceTypeFromEnv()
 		cloudHref    = getTestCloudFromEnv()
+		subnetHref   = getTestSubnetFromEnv()
 		inst         cm15.Instance
 	)
 	resource.Test(t, resource.TestCase{
@@ -81,20 +84,20 @@ func TestAccRightScaleInstance_locked(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstance_basic(instanceName, cloudHref, imageHref, typeHref),
+				Config: testAccInstance_basic(instanceName, cloudHref, subnetHref, imageHref, typeHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("rightscale_instance.test-instance", &inst),
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstance_locked(instanceName, cloudHref, imageHref, typeHref),
+				Config: testAccInstance_locked(instanceName, cloudHref, subnetHref, imageHref, typeHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("rightscale_instance.test-instance", &inst),
 					testAccCheckInstanceLocked(&inst),
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstance_unlocked(instanceName, cloudHref, imageHref, typeHref),
+				Config: testAccInstance_unlocked(instanceName, cloudHref, subnetHref, imageHref, typeHref),
 			},
 		},
 	})
@@ -173,53 +176,57 @@ func testAccCheckInstanceUserdata(userData string, inst *cm15.Instance) resource
 	}
 }
 
-func testAccInstance_basic(name string, cloud_href string, image_href string, instance_type_href string) string {
+func testAccInstance_basic(name string, cloud_href string, subnet_href string, image_href string, instance_type_href string) string {
 	return fmt.Sprintf(`
 resource "rightscale_instance" "test-instance" {
 	name                = %q
 	cloud_href          = %q
+	subnet_hrefs        = [%q]
 	image_href          = %q
 	instance_type_href  = %q
   associate_public_ip_address = true
 }
-`, name, cloud_href, image_href, instance_type_href)
+`, name, cloud_href, subnet_href, image_href, instance_type_href)
 }
 
-func testAccInstance_locked(name string, cloud_href string, image_href string, instance_type_href string) string {
+func testAccInstance_locked(name string, cloud_href string, subnet_href string, image_href string, instance_type_href string) string {
 	return fmt.Sprintf(`
 resource "rightscale_instance" "test-instance" {
 	name                = %q
 	cloud_href          = %q
+	subnet_hrefs        = [%q]
 	image_href          = %q
 	instance_type_href  = %q
   locked              = true
   associate_public_ip_address = true
 }
-`, name, cloud_href, image_href, instance_type_href)
+`, name, cloud_href, subnet_href, image_href, instance_type_href)
 }
 
-func testAccInstance_unlocked(name string, cloud_href string, image_href string, instance_type_href string) string {
+func testAccInstance_unlocked(name string, cloud_href string, subnet_href string, image_href string, instance_type_href string) string {
 	return fmt.Sprintf(`
 resource "rightscale_instance" "test-instance" {
 	name                = %q
 	cloud_href          = %q
+	subnet_hrefs        = [%q]
 	image_href          = %q
 	instance_type_href  = %q
   locked              = false
   associate_public_ip_address = true
 }
-`, name, cloud_href, image_href, instance_type_href)
+`, name, cloud_href, subnet_href, image_href, instance_type_href)
 }
 
-func testAccInstance_userdata(name string, cloud_href string, image_href string, instance_type_href string, userdata string) string {
+func testAccInstance_userdata(name string, cloud_href string, subnet_href string, image_href string, instance_type_href string, userdata string) string {
 	return fmt.Sprintf(`
 resource "rightscale_instance" "test-instance" {
 	name                = %q
 	cloud_href          = %q
+	subnet_hrefs        = [%q]
 	image_href          = %q
 	instance_type_href  = %q
   user_data           = %q
   associate_public_ip_address = true
 }
-`, name, cloud_href, image_href, instance_type_href, userdata)
+`, name, cloud_href, subnet_href, image_href, instance_type_href, userdata)
 }
