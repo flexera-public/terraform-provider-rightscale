@@ -27,7 +27,7 @@ var envVars = map[string]string{
 	"network":        "RIGHTSCALE_NETWORK_HREF",
 	"securityGroup":  "RIGHTSCALE_SECURITY_GROUP_HREF",
 	"subnet":         "RIGHTSCALE_SUBNET_HREF",
-	"datacenter":    "RIGHTSCALE_DATACENTER_HREF",
+	"datacenter":     "RIGHTSCALE_DATACENTER_HREF",
 	"routeTable":     "RIGHTSCALE_ROUTE_TABLE_HREF",
 	"networkGateway": "RIGHTSCALE_NETWORK_GATEWAY_HREF",
 }
