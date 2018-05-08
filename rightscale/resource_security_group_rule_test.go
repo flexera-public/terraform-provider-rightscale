@@ -5,15 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
+
 	"github.com/rightscale/rsc/cm15"
 	"github.com/rightscale/rsc/rsapi"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-)
-
-const (
-	sgCidrIps = "192.168.1.66/32"
 )
 
 func TestAccRightScaleSecurityRuleGroup(t *testing.T) {
@@ -22,6 +20,7 @@ func TestAccRightScaleSecurityRuleGroup(t *testing.T) {
 	var (
 		depl          cm15.SecurityGroupRule
 		securityGroup = getTestSecurityGroupFromEnv()
+		sgCidrIps     = fmt.Sprintf("192.168.%v.%v/32", acctest.RandIntRange(1, 254), acctest.RandIntRange(1, 254))
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
