@@ -124,17 +124,16 @@ func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func
 	return func(d *schema.ResourceData, m interface{}) error {
 		client := m.(rsc.Client)
 		res, err := client.Create("rs_cm", "servers", fieldsFunc(d))
+		log.Printf("MARKDEBUG - resourceCreateServer 1 - res.Locator.Namespace is: %s, res.Locator.Href is: %s, res.Locator.Type is: %s", res.Locator.Namespace, res.Locator.Href, res.Locator.Type)
 		if err != nil {
 			return err
 		}
-		log.Printf("MARKDEBUG - resourceCreateServer 1 - res.Fields is %s", res.Fields)
 		for k, v := range res.Fields {
-			log.Printf("MARKDEBUG - resourceCreateServer2 - ranging res.Fields - k is: %v, and v is: %v", k, v)
 			d.Set(k, v)
 		}
-		log.Printf("MARKDEBUG - resourceCreateServer 3 - before d.SetId - d.id() is: %v", d.Id())
+		log.Printf("MARKDEBUG - resourceCreateServer 2 - before d.SetId - d.id() is: %v", d.Id())
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
-		log.Printf("MARKDEBUG - resourceCreateServer 4 - after d.SetId - d.id() is: %v", d.Id())
+		log.Printf("MARKDEBUG - resourceCreateServer 3 - after d.SetId - d.id() is: %v - now doing a stupid sleep for 10 seconds", d.Id())
 		return nil
 	}
 }
