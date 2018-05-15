@@ -1,10 +1,20 @@
 package rightscale
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
+
+// resource "rightscale_instance" "my_instance" {
+//   cloud_href = "/api/clouds/6"
+//   image_href = "/api/clouds/6/images/3TRNL47PJB97N"
+//   instance_type_href = "/api/clouds/6/instance_types/8SCHNH0JBHE1R"
+//   deployment_href = "/api/deployments/934588004"
+//   name = "My Instance"
+// }
 
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
@@ -365,6 +375,10 @@ func instanceUpdateFields(d *schema.ResourceData) rsc.Fields {
 	if a, ok := d.GetOk("cloud_specific_attributes"); ok {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
+	// TODO - fixme
+	if a, ok := d.GetOk("inputs"); ok {
+		fields["inputs"] = a.([]interface{})[0]
+	}
 	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
 }
 
@@ -385,6 +399,10 @@ func instanceWriteFields(d *schema.ResourceData) rsc.Fields {
 	if a, ok := d.GetOk("cloud_specific_attributes"); ok {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
+	// TODO - fixme
+	if a, ok := d.GetOk("inputs"); ok {
+		fields["inputs"] = a.([]interface{})[0]
+	}
 	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
 }
 
@@ -404,6 +422,13 @@ func instanceWriteFieldsFromMap(d map[string]interface{}) rsc.Fields {
 	}
 	if a, ok := d["cloud_specific_attributes"]; ok && len(a.([]interface{})) > 0 {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
+	}
+	if a, ok := d["inputs"]; ok && len(a.([]interface{})) > 0 {
+		if r, ok := cmInputs(d["inputs"].([]interface{})); ok != nil {
+			log.Printf("[ERROR]: %v", ok)
+		} else {
+			fields["inputs"] = r["inputs"]
+		}
 	}
 	return fields
 }

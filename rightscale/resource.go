@@ -44,15 +44,12 @@ func resourceUpdateFunc(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(*
 }
 
 func resourceRead(d *schema.ResourceData, m interface{}) error {
-	log.Printf("MARKDEBUG - resourceRead 1 - d.id() is: %v", d.Id())
 	client := m.(rsc.Client)
 	loc, err := locator(d)
-	log.Printf("MARKDEBUG - resourceRead 2 - d.id() is: %v", d.Id())
 	if err != nil {
 		return err
 	}
 	res, err := client.Get(loc)
-	log.Printf("MARKDEBUG - resourceRead 3 - d.id() is: %v", d.Id())
 	if err != nil {
 		return handleRSCError(d, err)
 	}
@@ -63,15 +60,12 @@ func resourceRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	log.Printf("MARKDEBUG - resourceExists 1 - d.id() is: %v", d.Id())
 	client := m.(rsc.Client)
 	loc, err := locator(d)
-	log.Printf("MARKDEBUG - resourceExists 2 - d.id() is: %v", d.Id())
 	if err != nil {
 		return false, err
 	}
 	res, err := client.Get(loc)
-	log.Printf("MARKDEBUG - resourceExists 3 - d.id() is: %v", d.Id())
 	if err != nil {
 		return false, err
 	}
@@ -103,7 +97,6 @@ func handleRSCError(d *schema.ResourceData, err error) error {
 // locator builds a locator from a schema.
 func locator(d *schema.ResourceData) (*rsc.Locator, error) {
 	parts := strings.Split(d.Id(), ":")
-	log.Printf("MARKDEBUG - resource locator - parts is: %v", parts)
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid resource ID %q", d.Id())
 	}

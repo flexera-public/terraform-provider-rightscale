@@ -1,8 +1,6 @@
 package rightscale
 
 import (
-	"log"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
@@ -79,28 +77,14 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 	fields := rsc.Fields{}
 	// construct 'instance' hash so we end up with a server WITH a running instance
 	if i, ok := d.GetOk("instance"); ok {
-		fields["instance"] = i.([]interface{})[0].(map[string]interface{})
-		if fields["instance"].(map[string]interface{})["associate_public_ip_address"].(bool) == false {
-			delete(fields["instance"].(map[string]interface{}), "associate_public_ip_address")
-		}
-		log.Printf("MARKDEBUG - 1 serverWriteFields - fields[instance] is: %v", fields["instance"])
-		// Handle inputs for the server object
-		a := fields["instance"].(map[string]interface{})["inputs"].([]interface{})
-		log.Printf("MARKDEBUG - 2 serverWriteFields - a is: %v", a)
-		if len(a) < 1 {
-			// inputs not defined - remove the field from the fields hash
-			log.Println("MARKDEBUG - 2.5 - hit length is less then 1")
-			delete(fields["instance"].(map[string]interface{}), "inputs")
-		} else {
-			if r, ok := cmInputs(a); ok != nil {
-				log.Printf("[ERROR]: %v", ok)
-			} else {
-				log.Printf("MARKDEBUG - 3 serverWriteFields - r is: %v", r)
-				fields["instance"].(map[string]interface{})["inputs"] = r["inputs"]
-				log.Printf("MARKDEBUG - 4 serverWriteFields - fields[instance] is %v", fields["instance"])
-			}
-		}
+		fields["instance"] = instanceWriteFieldsFromMap(i.([]interface{})[0].(map[string]interface{}))
 	}
+	// TODO - Is this needed still?
+	//fields["instance"] = i.([]interface{})[0].(map[string]interface{})
+	//if fields["instance"].(map[string]interface{})["associate_public_ip_address"].(bool) == false {
+	//  delete(fields["instance"].(map[string]interface{}), "associate_public_ip_address")
+	//}
+
 	if o, ok := d.GetOk("optimized"); ok {
 		if o.(bool) {
 			fields["optimized"] = "true"
@@ -116,7 +100,6 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 			fields[f] = v
 		}
 	}
-	log.Printf("MARKDEBUG - 4 serverWriteFields - fields[instance] is %v", fields)
 	return rsc.Fields{"server": fields}
 }
 
@@ -124,16 +107,13 @@ func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func
 	return func(d *schema.ResourceData, m interface{}) error {
 		client := m.(rsc.Client)
 		res, err := client.Create("rs_cm", "servers", fieldsFunc(d))
-		log.Printf("MARKDEBUG - resourceCreateServer 1 - res.Locator.Namespace is: %s, res.Locator.Href is: %s, res.Locator.Type is: %s", res.Locator.Namespace, res.Locator.Href, res.Locator.Type)
 		if err != nil {
 			return err
 		}
 		for k, v := range res.Fields {
 			d.Set(k, v)
 		}
-		log.Printf("MARKDEBUG - resourceCreateServer 2 - before d.SetId - d.id() is: %v", d.Id())
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
-		log.Printf("MARKDEBUG - resourceCreateServer 3 - after d.SetId - d.id() is: %v - now doing a stupid sleep for 10 seconds", d.Id())
 		return nil
 	}
 }
