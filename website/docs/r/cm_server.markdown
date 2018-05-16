@@ -23,8 +23,8 @@ resource "rightscale_server" "web_server" {
     name = "web_instance"
     server_template_href = "/api/server_templates/1234"
     inputs {
-      FOO: "text:bar"
-      BAZ: "cred:Bangarang"
+      FOO = "text:bar"
+      BAZ = "cred:Bangarang"
     }
   }
 }

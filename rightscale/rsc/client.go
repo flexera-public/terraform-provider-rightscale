@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -393,7 +392,6 @@ func (rsc *client) Create(namespace, typ string, fields Fields) (*Resource, erro
 	$fields = to_json($res["details"][0])
 	`, js)
 
-	log.Printf("MARKDEBUG - rsc Create - rcl is %s", rcl)
 	outputs, err := rsc.runRCL(rcl, "$href", "$fields")
 	if err != nil {
 		return nil, err
@@ -410,7 +408,6 @@ func (rsc *client) Create(namespace, typ string, fields Fields) (*Resource, erro
 		Type:      typ,
 		Href:      outputs["$href"].(string),
 	}
-	log.Printf("MARKDEBUG - 2 rsc Create - loc is: %v", loc)
 	return &Resource{Locator: &loc, Fields: ofields}, nil
 }
 

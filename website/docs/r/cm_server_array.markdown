@@ -46,8 +46,8 @@ resource "rightscale_server_array" "frontend_servers_array" {
 		name                 = "Frontend"
 		subnet_hrefs         = ["/api/clouds/1/subnets/52NUHI2B8LVH1"]
 		inputs {
-      FOO: "text:bar"
-      BAZ: "cred:Bangarang"
+      FOO = "text:bar"
+      BAZ = "cred:Bangarang"
     }
 	}
 
