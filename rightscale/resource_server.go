@@ -94,12 +94,6 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 	if i, ok := d.GetOk("instance"); ok {
 		fields["instance"] = instanceWriteFieldsFromMap(i.([]interface{})[0].(map[string]interface{}))
 	}
-	// TODO - Is this needed still?
-	//fields["instance"] = i.([]interface{})[0].(map[string]interface{})
-	//if fields["instance"].(map[string]interface{})["associate_public_ip_address"].(bool) == false {
-	//  delete(fields["instance"].(map[string]interface{}), "associate_public_ip_address")
-	//}
-
 	if o, ok := d.GetOk("optimized"); ok {
 		if o.(bool) {
 			fields["optimized"] = "true"
