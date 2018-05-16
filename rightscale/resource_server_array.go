@@ -6,6 +6,51 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
+// Example:
+//
+// resource "rightscale_server_array" "frontend_servers_array" {
+//   array_type = "alert"
+//
+//   datacenter_policy = [{
+//     datacenter_href = "/api/clouds/1234/datacenters/DEOLL9UREJ7TA"
+//     max             = 4
+//     weight          = 100
+//	  }]
+//
+//	elasticity_params = {
+//		alert_specific_params = {
+//		decision_threshold = 75
+//	}
+//
+//	bounds = {
+//		min_count = 1
+//		max_count = 4
+//	}
+//
+//	pacing = {
+//		resize_down_by = 1
+//		resize_up_by   = 1
+//		}
+//	}
+//
+//	instance = {
+//		cloud_href           = "/api/clouds/1234"
+//		image_href           = "/api/clouds/1234/images/1234"
+//		instance_type_href   = "/api/clouds/1234/instance_types/1234"
+//		server_template_href = "/api/server_templates/1234"
+//		name                 = "Frontend"
+//		subnet_hrefs         = ["/api/clouds/1/subnets/52NUHI2B8LVH1"]
+//		inputs {
+//      FOO: "text:bar"
+//      BAZ: "cred:Bangarang"
+//    }
+//	}
+//
+//	name            = "FrontEnd Servers Array"
+//	state           = "enabled"
+//	deployment_href = "/api/deployments/1234"
+//	}
+
 func resourceServerArray() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
@@ -238,6 +283,11 @@ func resourceServerArray() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 				Computed: true,
+			},
+			"href": &schema.Schema{
+				Description: "href of array",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}

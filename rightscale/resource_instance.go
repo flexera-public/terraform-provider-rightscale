@@ -31,7 +31,9 @@ func resourceInstance() *schema.Resource {
 			"associate_public_ip_address": &schema.Schema{
 				Description: "Specify whether or not you want a public IP assigned when this Instance is launched. Only applies to Network-enabled Instances. If this is not specified, it will default to true.",
 				Type:        schema.TypeBool,
-				Optional:    true,
+				Default:     true,
+				//ValidateFunc: validation.StringInSlice([]string{"true", "false"}, false),
+				Optional: true,
 			},
 			"cloud_href": &schema.Schema{
 				Description: "The ID of the instance cloud",
@@ -55,10 +57,13 @@ func resourceInstance() *schema.Resource {
 				Required:    true,
 			},
 			"inputs": &schema.Schema{
-				Description: "Inputs associated with an instance when incarnated from a server or server array - should be rendered via template provider - see docs",
+				Description: "Inputs associated with an instance when incarnated from a server or server array",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeMap},
 				Optional:    true,
+				ForceNew:    true,
+				// Uncomment validation when tf adds supported operation on lists or sets.
+				//ValidateFunc: validation.StringMatch(regexp.MustCompile("\\w+=\\w+:\\w+"), "values must be in format of 'key=type:value'"),
 			},
 			"instance_type_href": &schema.Schema{
 				Description: "The ID of the instance type",
@@ -375,10 +380,8 @@ func instanceUpdateFields(d *schema.ResourceData) rsc.Fields {
 	if a, ok := d.GetOk("cloud_specific_attributes"); ok {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
-	// TODO - fixme
-	if a, ok := d.GetOk("inputs"); ok {
-		fields["inputs"] = a.([]interface{})[0]
-	}
+	// Note that this function is used only for raw instances, which do not support inputs.
+	// Invoke instanceWriteFieldsFromMap from other resources for instances derived from rs objects that support inputs.
 	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
 }
 
@@ -399,10 +402,8 @@ func instanceWriteFields(d *schema.ResourceData) rsc.Fields {
 	if a, ok := d.GetOk("cloud_specific_attributes"); ok {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
-	// TODO - fixme
-	if a, ok := d.GetOk("inputs"); ok {
-		fields["inputs"] = a.([]interface{})[0]
-	}
+	// Note that this function is used only for raw instances, which do not support inputs.
+	// Invoke instanceWriteFieldsFromMap from other resources for instances derived from rs objects that support inputs.
 	return rsc.Fields{"cloud_href": d.Get("cloud_href"), "instance": fields}
 }
 

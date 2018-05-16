@@ -3,12 +3,12 @@ layout: "rightscale"
 page_title: "Rightscale: instance"
 sidebar_current: "docs-rightscale-resource-instance"
 description: |-
-  Create and maintain a RightScale instance. 
+  Create and maintain a RightScale instance.
 ---
 
 # rightscale_instance
 
-Use this resource to create, update or destroy an instance 
+Use this resource to create, update or destroy an instance.
 
 ## Example Usage : Basic configuration of an instance resource
 
@@ -26,38 +26,40 @@ resource "rightscale_instance" "crunis_instance" {
 
 The following arguments are supported:
 
- * `name` - (Required) The name of the instance
- 
- * `cloud_href` - (Required) The cloud_href the instance belongs to
+ * `name` - (Required) The name of the instance.
 
- * `image_href` - (Required) The href of the instance image
+ * `cloud_href` - (Required) The cloud_href the instance belongs to.
 
- * `instance_type_href` - (Required) The href of the instance type
+ * `image_href` - (Required) The href of the instance image.
 
- * `server_template_href` - (Optional) The href of the instance server template resource
- 
- * `associate_public_ip_address` - (Optional) Indicates if the instance will get a Public IP address
+ * `instance_type_href` - (Required) The href of the instance type.
 
- * `cloud_specific_attributes` - (Optional) Attributes specific to the cloud the instance belongs to
+ * `server_template_href` - (Optional) The href of the instance server template resource.
 
-* `datacenter_href` - (Optional) The href of the [datacenter](http://docs.rightscale.com/cm/dashboard/clouds/generic/datacenter_zones_concepts.html) that holds the instance (e.g. /api/clouds/6/datacenters/6IHONC8ANOUHI)
+ * `inputs` - (Optional) Inputs associated with an instance when incarnated from a [server](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_server.markdown) or [server_array](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_server_array.markdown).
 
-* `deployment_href` - (Optional) The href of the [deployment](http://docs.rightscale.com/cm/dashboard/manage/deployments/) that contains the instance (e.g. /api/deployments/594684003)
+ * `associate_public_ip_address` - (Optional) Indicates if the instance will get a Public IP address.
 
-* `ip_forwarding_enabled` - (Optional) Allows this Instance to send and receive network traffic when the source and destination IP addresses do not match the IP address of this Instance
+ * `cloud_specific_attributes` - (Optional) Attributes specific to the cloud the instance belongs to.
 
-* `kernel_image_href` - (Optional) The href of the instance kernel image
+* `datacenter_href` - (Optional) The href of the datacenter that holds the instance (e.g. /api/clouds/6/datacenters/6IHONC8ANOUHI).
 
-* `ramdisk_image_href` - (Optional) The href of the instance ramdisk image
+* `deployment_href` - (Optional) The href of the deployment that contains the instance (e.g. /api/deployments/594684003).
 
-* `security_group_hrefs` - (Optional) The href of the instance security groups
+* `ip_forwarding_enabled` - (Optional) Allows this Instance to send and receive network traffic when the source and destination IP addresses do not match the IP address of this Instance.
 
-* `placement_group_href` - (Optional) The href of the [placement_group](http://docs.rightscale.com/cm/dashboard/clouds/aws/ec2_placement_groups.html) that contains the instance (e.g. /api/placement_groups/512SV3FUJA7OO)
+* `kernel_image_href` - (Optional) The href of the instance kernel image.
 
-* `ssh_key_href` - (Optional) The href of the SSH key to use
+* `ramdisk_image_href` - (Optional) The href of the instance ramdisk image.
 
-* `subnet_hrefs` - (Optional) The hrefs of the instance subnet
+* `security_group_hrefs` - (Optional) The href of the instance security groups.
 
-* `user_data` - (Optional) User data that RightScale automatically passes to your instance at boot time
+* `placement_group_href` - (Optional) The href of the [placement_group](http://docs.rightscale.com/cm/dashboard/clouds/aws/ec2_placement_groups.html) that contains the instance (e.g. /api/placement_groups/512SV3FUJA7OO).
 
-* `locked` - (Optional)  Whether instance is locked, a locked instance cannot be terminated or deleted
+* `ssh_key_href` - (Optional) The href of the SSH key to use.
+
+* `subnet_hrefs` - (Optional) The hrefs of the instance subnet.
+
+* `user_data` - (Optional) User data that RightScale automatically passes to your instance at boot time.
+
+* `locked` - (Optional)  Whether instance is locked, a locked instance cannot be terminated or deleted.

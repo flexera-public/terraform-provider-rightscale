@@ -45,6 +45,10 @@ resource "rightscale_server_array" "frontend_servers_array" {
 		server_template_href = "/api/server_templates/1234"
 		name                 = "Frontend"
 		subnet_hrefs         = ["/api/clouds/1/subnets/52NUHI2B8LVH1"]
+		inputs {
+      FOO: "text:bar"
+      BAZ: "cred:Bangarang"
+    }
 	}
 
 	name            = "FrontEnd Servers Array"
@@ -77,7 +81,7 @@ The following arguments are supported:
 
   * `weight` - (Required) Instance allocation (should total 100% accross datacenter_policies).
 
-* `elasticity_params` - (Required) 
+* `elasticity_params` - (Required)
 
   * `bounds` - (Required)
 
@@ -129,3 +133,5 @@ The following arguments are supported:
 ## Attribute Reference
 
 * `links` - Hrefs of related API resources
+
+* `href` - Href of the server_array.

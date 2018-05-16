@@ -5,6 +5,24 @@ import (
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
 
+// Example:
+//
+// resource "rightscale_server" "web_server" {
+//   name = "web_server"
+//   deployment_href = "/api/deployments/1234"
+//   instance {
+//     cloud_href = "/api/clouds/1234"
+//     image_href = "/api/clouds/1234/images/1234"
+//     instance_type_href = "/api/clouds/1234/instance_types/1234"
+//     name = "web_instance"
+//     server_template_href = "/api/server_templates/1234"
+//     inputs {
+//       FOO: "text:bar"
+//       BAZ: "cred:Bangarang"
+//     }
+//   }
+// }
+
 func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
@@ -48,17 +66,9 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"current_instance": {
-				Type:     schema.TypeMap,
-				Computed: true,
-			},
 			"links": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeMap},
-				Computed: true,
-			},
-			"next_instance": {
-				Type:     schema.TypeMap,
 				Computed: true,
 			},
 			"state": {
@@ -68,6 +78,11 @@ func resourceServer() *schema.Resource {
 			"updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"href": &schema.Schema{
+				Description: "href of server",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -113,6 +128,9 @@ func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func
 		for k, v := range res.Fields {
 			d.Set(k, v)
 		}
+		// Sets 'href' which is rightscale href (for stitching together cm resources IN rightscale) without namespace.
+		d.Set("href", res.Locator.Href)
+		// Sets 'id' which allows terraform to locate the objects created which includes namespace.
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
 		return nil
 	}
