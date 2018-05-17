@@ -32,8 +32,7 @@ func resourceInstance() *schema.Resource {
 				Description: "Specify whether or not you want a public IP assigned when this Instance is launched. Only applies to Network-enabled Instances. If this is not specified, it will default to true.",
 				Type:        schema.TypeBool,
 				Default:     true,
-				//ValidateFunc: validation.StringInSlice([]string{"true", "false"}, false),
-				Optional: true,
+				Optional:    true,
 			},
 			"cloud_href": &schema.Schema{
 				Description: "The ID of the instance cloud",

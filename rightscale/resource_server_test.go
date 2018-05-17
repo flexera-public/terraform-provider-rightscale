@@ -2,7 +2,6 @@ package rightscale
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 
@@ -158,7 +157,6 @@ func testAccCheckServerInputs(n string, serverName string, server *cm15.Server) 
 		expectedMatch := fmt.Sprintf("text:%v", serverName)
 		match := false
 		for _, input := range instance.Inputs {
-			log.Printf("MARKDEBUG - input is: %v", input)
 			if input["name"] == "SERVER_HOSTNAME" {
 				if input["value"] == expectedMatch {
 					match = true
