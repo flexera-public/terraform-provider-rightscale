@@ -201,7 +201,7 @@ resource "rightscale_server" "test-server-inputs" {
     instance_type_href   = %q
 		name                 = %q
 		inputs {
-			server_hostname = "text:%s"
+			SERVER_HOSTNAME = "text:%s"
 		}
 	server_template_href = %q
 	subnet_hrefs         = [%q]

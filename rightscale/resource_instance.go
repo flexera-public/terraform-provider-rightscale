@@ -425,8 +425,8 @@ func instanceWriteFieldsFromMap(d map[string]interface{}) rsc.Fields {
 		fields["cloud_specific_attributes"] = a.([]interface{})[0]
 	}
 	if a, ok := d["inputs"]; ok && len(a.([]interface{})) > 0 {
-		if r, ok := cmInputs(d["inputs"].([]interface{})); ok != nil {
-			log.Printf("[ERROR]: %v", ok)
+		if r, err := cmInputs(d["inputs"].([]interface{})); err != nil {
+			log.Printf("[ERROR]: %v", err)
 		} else {
 			fields["inputs"] = r["inputs"]
 		}
