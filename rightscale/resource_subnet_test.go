@@ -14,17 +14,17 @@ import (
 
 const (
 	subnetDescription = "Terraform RightScale provider test subnet"
-	subnetCidrBlock   = "192.168.20.0/24"
 )
 
 func TestAccRightScalesubnet(t *testing.T) {
 	t.Parallel()
 
 	var (
-		subnetName  = "terraform-test-" + testString + acctest.RandString(10)
-		depl        cm15.Subnet
-		cloudHref   = getTestCloudFromEnv()
-		networkHref = getTestNetworkFromEnv()
+		subnetName      = "terraform-test-" + testString + acctest.RandString(10)
+		depl            cm15.Subnet
+		cloudHref       = getTestCloudFromEnv()
+		networkHref     = getTestNetworkFromEnv()
+		subnetCidrBlock = fmt.Sprintf("192.168.%v.%v/28", acctest.RandIntRange(0, 255), acctest.RandIntRange(0, 255)&240)
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

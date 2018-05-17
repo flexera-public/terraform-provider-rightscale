@@ -15,16 +15,16 @@ import (
 const (
 	networkDescription = "Terraform RightScale provider test Network"
 	networkName        = "TerraformProviderTest"
-	networkCidrBlock   = "192.168.10.0/24"
 )
 
 func TestAccRightScaleNetwork(t *testing.T) {
 	t.Parallel()
 
 	var (
-		NetworkName = "terraform-test-" + testString + acctest.RandString(10)
-		depl        cm15.Network
-		cloudHref   = getTestCloudFromEnv()
+		NetworkName      = "terraform-test-" + testString + acctest.RandString(10)
+		depl             cm15.Network
+		cloudHref        = getTestCloudFromEnv()
+		networkCidrBlock = fmt.Sprintf("10.%v.%v.0/24", acctest.RandIntRange(0, 254), acctest.RandIntRange(0, 254))
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -13,18 +13,18 @@ import (
 )
 
 const (
-	routeFinalDestination = "0.0.0.0/0"
-	routeNextHopType      = "network_gateway"
+	routeNextHopType = "network_gateway"
 )
 
 func TestAccRightScaleRoute(t *testing.T) {
 	t.Parallel()
 
 	var (
-		routeDescription = "terraform-test-route" + testString + acctest.RandString(10)
-		depl             cm15.Route
-		networkGateway   = getTestNetworkGatewayFromEnv()
-		routeTable       = getTestRouteTableFromEnv()
+		routeDescription      = "terraform-test-route" + testString + acctest.RandString(10)
+		depl                  cm15.Route
+		networkGateway        = getTestNetworkGatewayFromEnv()
+		routeTable            = getTestRouteTableFromEnv()
+		routeFinalDestination = fmt.Sprintf("10.%v.%v.0/24", acctest.RandIntRange(0, 255), acctest.RandIntRange(0, 255))
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
