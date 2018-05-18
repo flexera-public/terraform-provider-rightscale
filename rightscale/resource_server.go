@@ -115,7 +115,7 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func(*schema.ResourceData, interface{}) error {
 	return func(d *schema.ResourceData, m interface{}) error {
 		client := m.(rsc.Client)
-		res, err := client.Create("rs_cm", "servers", fieldsFunc(d))
+		res, err := client.CreateServer("rs_cm", "servers", fieldsFunc(d))
 		if err != nil {
 			return err
 		}
