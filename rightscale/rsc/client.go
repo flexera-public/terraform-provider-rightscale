@@ -437,7 +437,101 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 	$fields = to_json($res["details"][0])
 	`, js)
 
-	defs := `define server_provision_tf(@res) return @server do\n  call rs__cwf_simple_provision(@res) retrieve @server\n\n  $object = to_object(@res)\n  $copies = $object["copies"]\n  if $copies && $copies > 1\n    sub on_error: rs__cwf_servers_provision_error_many(@server) do\n      call rs__cwf_servers_wait_for_provision_many(@server, 0)\n    end\n    @server = @server.get() # full refresh\n  else\n    call rs__cwf_servers_wait_for_provision_one(@server) retrieve @server\n  end\nend\n\n# Handle launch and poll errors for bulk collection\ndefine rs__cwf_servers_provision_error_many(@servers) do\n  # Update the @servers collection before trying to delete so we have updated state.\n  call rs__cwf_servers_delete(@servers.get())\n  $_error_behavior = "error"\nend\n\ndefine rs__cwf_servers_wait_for_provision_many(@servers, $attempts) do\n  sub on_error: rs__cwf_skip_any_error() do\n    @servers.launch()\n  end\n\n  sub on_error: rs__cwf_skip_any_error() do\n    sleep_until all?(@servers.state[], "/^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$/")\n  end\n\n  @servers = @servers.get()\n  # The only retryable state is 'inactive'\n  @retryables = select(@servers, {"state": "/^inactive$/"})\n  @operationals = select(@servers, {"state": "/^operational$/"})\n\n  if size(@retryables) + size(@operationals) < size(@servers)\n    # Some servers are not in a retryable nor in 'operational' state, raise error\n    raise "Failed to provision servers. Some servers are not operational"\n  end\n\n  # Retry to launch the servers that have failed to launch.\n  if size(@retryables) > 0\n    if $attempts < 3\n      call rs__cwf_servers_wait_for_provision_many(@retryables, $attempts + 1)\n    else\n      raise "Failed to provision servers: some servers are in 'inactive' state after 3 launches"\n    end\n  end\nend\n\n# wait for one server to be 'ready'.\ndefine rs__cwf_servers_wait_for_provision_one(@server) return @server do\n  # keep server name in case of error where @server is invalid\n  $server_name = to_s(@server.name)\n\n  sub on_error: rs__cwf_servers_handle_launch_failure(@server) do\n    @server.launch()\n  end\n\n  $final_state = "launching"\n  sub on_error: rs__cwf_skip_any_error() do\n    sleep_until @server.state =~ "^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$"\n    $final_state = @server.state\n  end\n  if $final_state == "operational"\n    @server = rs_cm.get(href: @server.href)  # full refresh\n  else\n    # Update the @server collection before trying to delete so we have updated state.\n    call rs__cwf_servers_delete(@server.get())\n    raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name\n  end\nend\n\ndefine rs__cwf_servers_handle_launch_failure(@server) do\n  $server_name = @server.name\n  sub on_error: rs__cwf_skip_any_error() do\n    call rs__cwf_terminate(@server)\n  end\n\n  call rs__cwf_simple_delete(@server)\n\n  if $_errors && $_errors[0] && $_errors[0]["response"]\n    raise "Error trying to launch server (" + $server_name + "): " + $_errors[0]["response"]["body"]\n  else\n    raise "Error trying to launch server (" + $server_name + ")"\n  end\nend\n\n# deletes a server after successful termination.\ndefine rs__cwf_servers_delete(@servers) do\n  call rs__cwf_terminate(@servers)\n  call rs__cwf_simple_delete(@servers)\nend\n`
+	defs := `# provisions, launches and awaits a server going operational or failing.
+	define server_provision_tf(@res) return @server do
+	  call rs__cwf_simple_provision(@res) retrieve @server
+	
+	  $object = to_object(@res)
+	  $copies = $object["copies"]
+	  if $copies && $copies > 1
+		sub on_error: rs__cwf_servers_provision_error_many(@server) do
+		  call rs__cwf_servers_wait_for_provision_many(@server, 0)
+		end
+		@server = @server.get() # full refresh
+	  else
+		call rs__cwf_servers_wait_for_provision_one(@server) retrieve @server
+	  end
+	end
+	
+	# Handle launch and poll errors for bulk collection
+	define rs__cwf_servers_provision_error_many(@servers) do
+	  # Update the @servers collection before trying to delete so we have updated state.
+	  call rs__cwf_servers_delete(@servers.get())
+	  $_error_behavior = "error"
+	end
+	
+	define rs__cwf_servers_wait_for_provision_many(@servers, $attempts) do
+	  sub on_error: rs__cwf_skip_any_error() do
+		@servers.launch()
+	  end
+	
+	  sub on_error: rs__cwf_skip_any_error() do
+		sleep_until all?(@servers.state[], "/^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$/")
+	  end
+	
+	  @servers = @servers.get()
+	  # The only retryable state is 'inactive'
+	  @retryables = select(@servers, {"state": "/^inactive$/"})
+	  @operationals = select(@servers, {"state": "/^operational$/"})
+	
+	  if size(@retryables) + size(@operationals) < size(@servers)
+		# Some servers are not in a retryable nor in 'operational' state, raise error
+		raise "Failed to provision servers. Some servers are not operational"
+	  end
+	
+	  # Retry to launch the servers that have failed to launch.
+	  if size(@retryables) > 0
+		if $attempts < 3
+		  call rs__cwf_servers_wait_for_provision_many(@retryables, $attempts + 1)
+		else
+		  raise "Failed to provision servers: some servers are in 'inactive' state after 3 launches"
+		end
+	  end
+	end
+	
+	# wait for one server to be 'ready'.
+	define rs__cwf_servers_wait_for_provision_one(@server) return @server do
+	  # keep server name in case of error where @server is invalid
+	  $server_name = to_s(@server.name)
+	
+	  sub on_error: rs__cwf_servers_handle_launch_failure(@server) do
+		@server.launch()
+	  end
+	
+	  $final_state = "launching"
+	  sub on_error: rs__cwf_skip_any_error() do
+		sleep_until @server.state =~ "^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$"
+		$final_state = @server.state
+	  end
+	  if $final_state == "operational"
+		@server = rs_cm.get(href: @server.href)  # full refresh
+	  else
+		# Update the @server collection before trying to delete so we have updated state.
+		call rs__cwf_servers_delete(@server.get())
+		raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name
+	  end
+	end
+	
+	define rs__cwf_servers_handle_launch_failure(@server) do
+	  $server_name = @server.name
+	  sub on_error: rs__cwf_skip_any_error() do
+		call rs__cwf_terminate(@server)
+	  end
+	
+	  call rs__cwf_simple_delete(@server)
+	
+	  if $_errors && $_errors[0] && $_errors[0]["response"]
+		raise "Error trying to launch server (" + $server_name + "): " + $_errors[0]["response"]["body"]
+	  else
+		raise "Error trying to launch server (" + $server_name + ")"
+	  end
+	end
+	
+	# deletes a server after successful termination.
+	define rs__cwf_servers_delete(@servers) do
+	  call rs__cwf_terminate(@servers)
+	  call rs__cwf_simple_delete(@servers)
+	end`
 
 	log.Printf("MARK DEBUG - CreateServer - rcl is: %s, defs is: %s", rcl, defs)
 	outputs, err := rsc.runRCLWithDefinitions(rcl, defs, "$href", "$fields")
