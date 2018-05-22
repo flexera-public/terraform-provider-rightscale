@@ -1,6 +1,8 @@
 package rightscale
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
@@ -117,6 +119,10 @@ func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func
 		client := m.(rsc.Client)
 		res, err := client.CreateServer("rs_cm", "servers", fieldsFunc(d))
 		if err != nil {
+			// TODO - figure this part out now that we have a href on stranded.
+			//d.Partial(true)
+			//d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
+			log.Printf("MARKDEBUG - resourceCreateServer - href is: %v", res.Locator.Href)
 			return err
 		}
 		for k, v := range res.Fields {

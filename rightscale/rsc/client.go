@@ -431,114 +431,77 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 
 	rcl := fmt.Sprintf(`
 	@res = %s
-	server_provision_tf(@res)
-	$href   = @res.href
+	call server_provision_tf(@res) retrieve @server
+	$href   = @server.href
 	$res    = to_object(@res)
-	$fields = to_json($res["details"][0])
 	`, js)
 
-	defs := `# provisions, launches and awaits a server going operational or failing.
+	defs := `# custom provision that does not auto-cleanup on error
 	define server_provision_tf(@res) return @server do
-	  call rs__cwf_simple_provision(@res) retrieve @server
-	
-	  $object = to_object(@res)
-	  $copies = $object["copies"]
-	  if $copies && $copies > 1
-		sub on_error: rs__cwf_servers_provision_error_many(@server) do
-		  call rs__cwf_servers_wait_for_provision_many(@server, 0)
+		# use RS canned provision to create
+		call rs__cwf_simple_provision(@res) retrieve @server
+		$object = to_object(@res)
+		# use custom launch to avoid cleanup on error
+		call tf_server_wait_for_provision(@server) retrieve @server
+	end
+
+	define tf_server_wait_for_provision(@server) return @server do
+		$server_name = to_s(@server.name)
+		sub on_error: tf_server_handle_launch_failure(@server) do
+			@server.launch()
 		end
-		@server = @server.get() # full refresh
-	  else
-		call rs__cwf_servers_wait_for_provision_one(@server) retrieve @server
-	  end
+		$final_state = "launching"
+		# use RS canned logic to capture launching server state
+		sub on_error: rs__cwf_skip_any_error() do
+			sleep_until @server.state =~ "^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$"
+			$final_state = @server.state
+		end
 	end
-	
-	# Handle launch and poll errors for bulk collection
-	define rs__cwf_servers_provision_error_many(@servers) do
-	  # Update the @servers collection before trying to delete so we have updated state.
-	  call rs__cwf_servers_delete(@servers.get())
-	  $_error_behavior = "error"
-	end
-	
-	define rs__cwf_servers_wait_for_provision_many(@servers, $attempts) do
-	  sub on_error: rs__cwf_skip_any_error() do
-		@servers.launch()
-	  end
-	
-	  sub on_error: rs__cwf_skip_any_error() do
-		sleep_until all?(@servers.state[], "/^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$/")
-	  end
-	
-	  @servers = @servers.get()
-	  # The only retryable state is 'inactive'
-	  @retryables = select(@servers, {"state": "/^inactive$/"})
-	  @operationals = select(@servers, {"state": "/^operational$/"})
-	
-	  if size(@retryables) + size(@operationals) < size(@servers)
-		# Some servers are not in a retryable nor in 'operational' state, raise error
-		raise "Failed to provision servers. Some servers are not operational"
-	  end
-	
-	  # Retry to launch the servers that have failed to launch.
-	  if size(@retryables) > 0
-		if $attempts < 3
-		  call rs__cwf_servers_wait_for_provision_many(@retryables, $attempts + 1)
+
+	# spit out error from launch call
+	define tf_server_handle_launch_failure(@server) do
+		$server_name = @server.name
+		if $_errors && $_errors[0] && $_errors[0]["response"]
+			raise "Error trying to launch server (" + $server_name + "): " + $_errors[0]["response"]["body"]
 		else
-		  raise "Failed to provision servers: some servers are in 'inactive' state after 3 launches"
+			raise "Error trying to launch server (" + $server_name + ")"
 		end
-	  end
-	end
-	
-	# wait for one server to be 'ready'.
-	define rs__cwf_servers_wait_for_provision_one(@server) return @server do
-	  # keep server name in case of error where @server is invalid
-	  $server_name = to_s(@server.name)
-	
-	  sub on_error: rs__cwf_servers_handle_launch_failure(@server) do
-		@server.launch()
-	  end
-	
-	  $final_state = "launching"
-	  sub on_error: rs__cwf_skip_any_error() do
-		sleep_until @server.state =~ "^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$"
-		$final_state = @server.state
-	  end
-	  if $final_state == "operational"
-		@server = rs_cm.get(href: @server.href)  # full refresh
-	  else
-		# Update the @server collection before trying to delete so we have updated state.
-		call rs__cwf_servers_delete(@server.get())
-		raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name
-	  end
-	end
-	
-	define rs__cwf_servers_handle_launch_failure(@server) do
-	  $server_name = @server.name
-	  sub on_error: rs__cwf_skip_any_error() do
-		call rs__cwf_terminate(@server)
-	  end
-	
-	  call rs__cwf_simple_delete(@server)
-	
-	  if $_errors && $_errors[0] && $_errors[0]["response"]
-		raise "Error trying to launch server (" + $server_name + "): " + $_errors[0]["response"]["body"]
-	  else
-		raise "Error trying to launch server (" + $server_name + ")"
-	  end
-	end
-	
-	# deletes a server after successful termination.
-	define rs__cwf_servers_delete(@servers) do
-	  call rs__cwf_terminate(@servers)
-	  call rs__cwf_simple_delete(@servers)
 	end`
 
 	log.Printf("MARK DEBUG - CreateServer - rcl is: %s, defs is: %s", rcl, defs)
-	outputs, err := rsc.runRCLWithDefinitions(rcl, defs, "$href", "$fields")
+	// construct a custom main() for server so we capture href EVEN on provision error
+	source := "define main() return $href, $fields do\n"
+	source += "\t" + `$href = ""`
+	source += "\n\t" + "@server = rs_cm.servers.empty()\n"
+	rcl = strings.Trim(rcl, "\n\t")
+	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
+	source += "\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\n"
+	source += `$final_state = @server.state
+  if $final_state == "operational"
+    $fields = to_json($res["details"][0])
+    @server = rs_cm.get(href: @server.href)
+  else
+    $server_name = @server.name
+    raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href`
+	source += "\nend\nend"
+	source += "\n" + defs + "\n"
+	log.Printf("MARKDEBUG - source is: %s", source)
+	p, err := rsc.RunProcess(source, nil)
 	if err != nil {
+		log.Printf("MARKDEBUG - runRCLWithDefinitions 1 - first err hit - p is: %v, err is :%v", p, err)
 		return nil, err
 	}
-
+	if p.Status != "completed" {
+		log.Printf("MARKDEBUG - runRCLWithDefinitions 2 - 2nd err hit - p.Outputs is: %v", p.Outputs)
+		outputs := p.Outputs
+		loc := Locator{
+			Namespace: namespace,
+			Type:      typ,
+			Href:      outputs["$href"].(string),
+		}
+		return &Resource{Locator: &loc, Fields: nil}, fmt.Errorf("unexpected process status %q. Error: %s", p.Status, p.Error)
+	}
+	outputs := p.Outputs
 	var ofields Fields
 	err = json.Unmarshal([]byte(outputs["$fields"].(string)), &ofields)
 	if err != nil {
@@ -551,6 +514,33 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 		Href:      outputs["$href"].(string),
 	}
 	return &Resource{Locator: &loc, Fields: ofields}, nil
+}
+
+// TODO - delete me?  Not being called by CreateServer since a custom main is also needed...
+// runRCLWithDefinitions provides a convenient method for running the given RCL code
+// synchronously including with any definations. It returns the outputs with the given variable or reference
+// names.
+func (rsc *client) runRCLWithDefinitions(rcl string, defs string, outputs ...string) (map[string]interface{}, error) {
+	source := "define main() "
+	if len(outputs) > 0 {
+		source += "return " + strings.Join(outputs, ", ") + " "
+	}
+	rcl = strings.Trim(rcl, "\n\t")
+	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
+	source += "do\n\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\nend"
+	if len(defs) > 0 {
+		source += "\n" + defs
+	}
+	p, err := rsc.RunProcess(source, nil)
+	if err != nil {
+		log.Printf("MARKDEBUG - runRCLWithDefinitions 1 - first err hit - p is: %v, err is :%v", p, err)
+		return nil, err
+	}
+	if p.Status != "completed" {
+		log.Printf("MARKDEBUG - runRCLWithDefinitions 2 - 2nd err hit - p.Outputs is: %v", p.Outputs)
+		return p.Outputs, fmt.Errorf("unexpected process status %q. Error: %s", p.Status, p.Error)
+	}
+	return p.Outputs, nil
 }
 
 // Delete deletes the given resource.
@@ -600,6 +590,7 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 		}
 		res, err := rsc.requestCWF("post", "/cwf/v1/accounts/"+projectID+"/processes", nil, payload)
 		if err != nil {
+			log.Printf("MARKDEBUG - RunProcess - error hit - res is: %v, err is: %v", res, err)
 			return nil, err
 		}
 		processHref = res.(map[string]interface{})["Location"].(string)
@@ -659,6 +650,27 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 					Href:    processHref,
 					Status:  res["status"].(string),
 					Outputs: processOutputs(res),
+				}
+
+				// Keep waiting if outputs aren't yet present
+				if expectsOutputs && len(process.Outputs) == 0 {
+					expectsOutputsTimeout--
+					if expectsOutputsTimeout == 0 {
+						err = fmt.Errorf("no Outputs received from your CWF process, check your return clause")
+						return nil, err
+					}
+					continue
+				}
+
+				return process, nil
+
+			// capture outputs on failed just in case we had artifacts - we want to record those IDs so we don't create orphans
+			case "failed":
+				process = &Process{
+					Href:    processHref,
+					Status:  res["status"].(string),
+					Outputs: processOutputs(res),
+					Error:   processErrors(res),
 				}
 
 				// Keep waiting if outputs aren't yet present
@@ -739,31 +751,6 @@ func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}
 	rcl = strings.Trim(rcl, "\n\t")
 	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
 	source += "do\n\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\nend"
-	p, err := rsc.RunProcess(source, nil)
-	if err != nil {
-		return nil, err
-	}
-	if p.Status != "completed" {
-		return nil, fmt.Errorf("unexpected process status %q. Error: %s", p.Status, p.Error)
-	}
-	return p.Outputs, nil
-}
-
-// runRCLWithDefinitions provides a convenient method for running the given RCL code
-// synchronously including with any definations. It returns the outputs with the given variable or reference
-// names.
-func (rsc *client) runRCLWithDefinitions(rcl string, defs string, outputs ...string) (map[string]interface{}, error) {
-	source := "define main() "
-	if len(outputs) > 0 {
-		source += "return " + strings.Join(outputs, ", ") + " "
-	}
-	rcl = strings.Trim(rcl, "\n\t")
-	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
-	source += "do\n\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\nend"
-	if len(defs) > 0 {
-		log.Printf("MARKDEBUG - runRCLWithDefinations - defs is: %s", defs)
-		source += "\n" + defs
-	}
 	p, err := rsc.RunProcess(source, nil)
 	if err != nil {
 		return nil, err
