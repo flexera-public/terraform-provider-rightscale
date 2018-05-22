@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -436,7 +435,7 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 	$res    = to_object(@res)
 	`, js)
 
-	defs := `# custom provision that does not auto-cleanup on error
+	serverDef := `# custom provision that does not auto-cleanup on error
 	define server_provision_tf(@res) return @server do
 		# use RS canned provision to create
 		call rs__cwf_simple_provision(@res) retrieve @server
@@ -468,7 +467,6 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 		end
 	end`
 
-	log.Printf("MARK DEBUG - CreateServer - rcl is: %s, defs is: %s", rcl, defs)
 	// construct a custom main() for server so we capture href EVEN on provision error
 	source := "define main() return $href, $fields do\n"
 	source += "\t" + `$href = ""`
@@ -477,22 +475,20 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
 	source += "\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\n"
 	source += `$final_state = @server.state
-  if $final_state == "operational"
+	if $final_state == "operational"
+		$res = to_object(@server)
     $fields = to_json($res["details"][0])
     @server = rs_cm.get(href: @server.href)
   else
     $server_name = @server.name
     raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href`
 	source += "\nend\nend"
-	source += "\n" + defs + "\n"
-	log.Printf("MARKDEBUG - source is: %s", source)
+	source += "\n" + serverDef + "\n"
 	p, err := rsc.RunProcess(source, nil)
 	if err != nil {
-		log.Printf("MARKDEBUG - runRCLWithDefinitions 1 - first err hit - p is: %v, err is :%v", p, err)
 		return nil, err
 	}
 	if p.Status != "completed" {
-		log.Printf("MARKDEBUG - runRCLWithDefinitions 2 - 2nd err hit - p.Outputs is: %v", p.Outputs)
 		outputs := p.Outputs
 		loc := Locator{
 			Namespace: namespace,
@@ -516,10 +512,9 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 	return &Resource{Locator: &loc, Fields: ofields}, nil
 }
 
-// TODO - delete me?  Not being called by CreateServer since a custom main is also needed...
 // runRCLWithDefinitions provides a convenient method for running the given RCL code
 // synchronously including with any definations. It returns the outputs with the given variable or reference
-// names.
+// names.  It executes from a simply constructed 'main' so this may not be sufficient depending on the resource.
 func (rsc *client) runRCLWithDefinitions(rcl string, defs string, outputs ...string) (map[string]interface{}, error) {
 	source := "define main() "
 	if len(outputs) > 0 {
@@ -533,11 +528,9 @@ func (rsc *client) runRCLWithDefinitions(rcl string, defs string, outputs ...str
 	}
 	p, err := rsc.RunProcess(source, nil)
 	if err != nil {
-		log.Printf("MARKDEBUG - runRCLWithDefinitions 1 - first err hit - p is: %v, err is :%v", p, err)
 		return nil, err
 	}
 	if p.Status != "completed" {
-		log.Printf("MARKDEBUG - runRCLWithDefinitions 2 - 2nd err hit - p.Outputs is: %v", p.Outputs)
 		return p.Outputs, fmt.Errorf("unexpected process status %q. Error: %s", p.Status, p.Error)
 	}
 	return p.Outputs, nil
@@ -590,7 +583,6 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 		}
 		res, err := rsc.requestCWF("post", "/cwf/v1/accounts/"+projectID+"/processes", nil, payload)
 		if err != nil {
-			log.Printf("MARKDEBUG - RunProcess - error hit - res is: %v, err is: %v", res, err)
 			return nil, err
 		}
 		processHref = res.(map[string]interface{})["Location"].(string)

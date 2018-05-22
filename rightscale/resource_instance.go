@@ -104,6 +104,7 @@ func resourceInstance() *schema.Resource {
 				Description: "The ID of the server template.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 			},
 			"ssh_key_href": &schema.Schema{
 				Description: "The ID of the SSH key to use",
