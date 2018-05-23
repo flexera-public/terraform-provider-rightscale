@@ -46,10 +46,10 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `name` - Name of the network gateway.
+* `name` - Name of the security group.
 
-* `resource_uid` - Network gateway resource_uid from cloud.
+* `resource_uid` - The cloud resource_uid of the security group.
 
-* `description` - The description of the network gateway.
+* `description` - The description of the security group.
 
 * `links` - Hrefs of related API resources.
