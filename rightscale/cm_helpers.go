@@ -37,10 +37,10 @@ func cmUIDSet(d *schema.ResourceData) bool {
 func cmIndexRetry(client rsc.Client, loc *rsc.Locator, typ string, d *schema.ResourceData, t int) error {
 	// verify we didn't set an insane retry time - 1200 seconds == 20 min
 	if t > 1200 {
-		return fmt.Errorf("[ERROR] A timeout above '%v' seconds is not supported", t)
+		return fmt.Errorf("[ERROR] A timeout of '%v' seconds is not supported (1200 seconds max)", t)
 	}
 	timeout := time.After((time.Duration(t)) * time.Second)
-	tick := time.Tick(10 + time.Second)
+	tick := time.Tick(10 * time.Second)
 	for {
 		select {
 		case <-timeout:
@@ -55,10 +55,10 @@ func cmIndexRetry(client rsc.Client, loc *rsc.Locator, typ string, d *schema.Res
 			}
 			// no results found - retry
 			if len(res) == 0 {
-				log.Printf("[INFO] Index listing did not locate '%s' object with matching resource_uid and filters - retrying...", typ)
+				log.Printf("[DEBUG] Index listing did not locate '%s' object with matching resource_uid and filters - retrying...", typ)
 			} else {
 				// results found - return
-				log.Printf("[INFO] Success! - Index listing located '%s' object with matching resource_uid and filters", typ)
+				log.Printf("[DEBUG] Success! - Index listing located '%s' object with matching resource_uid and filters", typ)
 				return nil
 			}
 		}
