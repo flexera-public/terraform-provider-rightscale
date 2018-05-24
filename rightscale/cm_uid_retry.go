@@ -44,9 +44,8 @@ func cmUIDRetry(client rsc.Client, loc *rsc.Locator, typ string, d *schema.Resou
 	for {
 		select {
 		case <-timeout:
-			// 5 minutes expired - raise and exit
-			return nil
-
+			// timeout hit - return an error
+			return fmt.Errorf("[ERROR] - Time of '%v' seconds exceeded and resource has not been located", t)
 		case <-tick:
 			// attempt list call that includes cloud resource_uid
 			res, err := client.List(loc, typ, cmFilters(d))
