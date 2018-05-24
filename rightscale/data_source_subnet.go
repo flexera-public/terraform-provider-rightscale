@@ -40,7 +40,7 @@ func dataSourceSubnet() *schema.Resource {
 						},
 						"resource_uid": {
 							Type:        schema.TypeString,
-							Description: "cloud ID of subnet",
+							Description: "cloud ID of subnet - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -115,6 +115,19 @@ func resourceSubnetRead(d *schema.ResourceData, m interface{}) error {
 	cloud := d.Get("cloud_href").(string)
 	loc := &rsc.Locator{Namespace: "rs_cm", Href: cloud}
 
+	// `resource_uid` is a cloud resource uid and by specifying it in the filter block
+	// it means we really think it should be there.  If resources were created outside of
+	// rightscale this logic can be used to allow for retries until rightscale polls the
+	// cloud to discover these resources.
+	// timeout will be treated as seconds.
+	if uidset := cmUIDSet(d); uidset {
+		timeout := 300
+		err := cmUIDRetry(client, loc, "subnets", d, timeout)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	res, err := client.List(loc, "subnets", cmFilters(d))
 	if err != nil {
 		return err

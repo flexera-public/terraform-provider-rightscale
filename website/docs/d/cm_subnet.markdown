@@ -37,7 +37,7 @@ The following arguments are supported:
 
   * `network_href` - (Optional) Network href the the subnet exists in.
 
-  * `resource_uid` - (Optional) The resource_uid of the subnet.
+  * `resource_uid` - (Optional) The resource_uid of the subnet.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
   * `datacenter_href` - (Optional) Href of the subnet datacenter resource.
 
