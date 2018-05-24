@@ -111,7 +111,7 @@ func dataSourceInstance() *schema.Resource {
 						},
 						"resource_uid": {
 							Type:        schema.TypeString,
-							Description: "cloud ID of instance, e.g. 'vpc-2124fe46'",
+							Description: "cloud ID - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -196,6 +196,17 @@ func resourceInstanceRead(d *schema.ResourceData, m interface{}) error {
 	} else {
 		return fmt.Errorf("instance data source must specify one of 'cloud_href' or 'server_array_href'")
 	}
+
+	// if 'resource_uid' filter is set, we expect it to show up.
+	// retry for 5 min to allow rightscale to poll cloud to discover.
+	if uidset := cmUIDSet(d); uidset {
+		timeout := 300
+		err := cmIndexRetry(client, loc, "instances", d, timeout)
+		if err != nil {
+			return err
+		}
+	}
+
 	res, err := client.List(loc, "instances", cmFilters(d))
 	if err != nil {
 		return err

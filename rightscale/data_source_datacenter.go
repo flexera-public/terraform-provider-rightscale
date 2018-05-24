@@ -38,9 +38,10 @@ func dataSourceDatacenter() *schema.Resource {
 							ForceNew: true,
 						},
 						"resource_uid": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:        schema.TypeString,
+							Description: "cloud ID - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
+							Optional:    true,
+							ForceNew:    true,
 						},
 					},
 				},
@@ -72,6 +73,16 @@ func resourceDatacenterRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(rsc.Client)
 	cloud := d.Get("cloud_href").(string)
 	loc := &rsc.Locator{Namespace: "rs_cm", Href: cloud}
+
+	// if 'resource_uid' filter is set, we expect it to show up.
+	// retry for 5 min to allow rightscale to poll cloud to discover.
+	if uidset := cmUIDSet(d); uidset {
+		timeout := 300
+		err := cmIndexRetry(client, loc, "datacenters", d, timeout)
+		if err != nil {
+			return err
+		}
+	}
 
 	res, err := client.List(loc, "datacenters", cmFilters(d))
 	if err != nil {

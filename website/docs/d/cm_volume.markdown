@@ -44,7 +44,7 @@ The following arguments are supported:
 
   * `description` - The description of the volume
 
-  * `resource_uid` - The resource_uid of the volume (e.g. vol-045e33fd28a746c45)
+  * `resource_uid` - The resource_uid of the volume.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
   * `deployment_href` - The href of the [deployment](http://docs.rightscale.com/cm/dashboard/manage/deployments/) that contains the volume (e.g. /api/deployments/594684003)
 

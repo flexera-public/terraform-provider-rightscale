@@ -38,7 +38,7 @@ The following arguments are supported:
 
   * `cidr_block` - (Optional) CIDR notation block of network.
 
-  * `resource_uid` - (Optional) The resource_uid of the network as reported by cm platform.
+  * `resource_uid` - (Optional) The resource_uid of the network.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
 ## Attributes Reference
 

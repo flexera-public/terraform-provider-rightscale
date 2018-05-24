@@ -39,7 +39,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) block supports:
 
-  * `resource_uid` (Optional) Instance type resource uid as displayed in cm platform.
+  * `resource_uid` (Optional) Instance type resource uid.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
   * `name` - (Optional) Instance type name as displayed in cm platform.  Pattern match.
 

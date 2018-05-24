@@ -55,10 +55,10 @@ func cmIndexRetry(client rsc.Client, loc *rsc.Locator, typ string, d *schema.Res
 			}
 			// no results found - retry
 			if len(res) == 0 {
-				log.Printf("[INFO] Index listing did not locate '%s' object with matching resource_uid and filter tags - retrying...", typ)
+				log.Printf("[INFO] Index listing did not locate '%s' object with matching resource_uid and filters - retrying...", typ)
 			} else {
 				// results found - return
-				log.Printf("[INFO] Success! - Index listing located '%s' object with matching resource_uid and filter tags", typ)
+				log.Printf("[INFO] Success! - Index listing located '%s' object with matching resource_uid and filters", typ)
 				return nil
 			}
 		}

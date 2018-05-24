@@ -35,7 +35,7 @@ The following arguments are supported:
 
   * `name` - The name of the volume type as reported by the rightscale platform
 
-  * `resource_uid` - The resource_uid of the volume_type as reported by the rightscale platform
+  * `resource_uid` - The resource_uid of the volume_type.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
 ## Attributes Reference
 
@@ -47,7 +47,7 @@ The following attributes are exported:
 
 * `description` - The description of the volume type.
 
-* `resource_uid` - The resource_uid of the volume type. (e.g. gp2) 
+* `resource_uid` - The resource_uid of the volume type. (e.g. gp2)
 
 * `links` - Hrefs of related API resources
 

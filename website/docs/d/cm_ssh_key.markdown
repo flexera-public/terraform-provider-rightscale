@@ -3,7 +3,7 @@ layout: "rightscale"
 page_title: "Rightscale: ssh_key"
 sidebar_current: "docs-rightscale-datasource-ssh-key"
 description: |-
-  Defines an ssh key datasource to operate against. 
+  Defines an ssh key datasource to operate against.
 ---
 
 # rightscale_ssh_key
@@ -48,13 +48,13 @@ The following arguments are supported:
 
 * `cloud_href` - (Required) The ID of the cloud with the ssh key you want.
 
-* `view` - (Optional) Set this to 'sensitive' to request the api return 'sensitive' information (in this case the private key material) with the request. Assumes rs account privs sufficient to do this operation. 
+* `view` - (Optional) Set this to 'sensitive' to request the api return 'sensitive' information (in this case the private key material) with the request. Assumes rs account privs sufficient to do this operation.
 
 The `filter` block supports:
 
-* `name` - (Optional) SSH key name.  Pattern match. 
+* `name` - (Optional) SSH key name.  Pattern match.
 
-* `resource_uid` - (Optional) Href/ID of the SSH key.
+* `resource_uid` - (Optional) Href/ID of the SSH key.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
 ## Attributes Reference
 

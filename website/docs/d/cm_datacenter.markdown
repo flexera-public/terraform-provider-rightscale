@@ -40,8 +40,8 @@ The following arguments are supported:
 * `filter` (OPTIONAL) - The filter block supports:
 
   * `name` - The name of the datacenter
-  
-  * `resource_id` - The resource_uid of the datacenter as reported by the rightscale platform
+
+  * `resource_id` - The resource_uid of the datacenter.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
 ## Attributes Reference
 
@@ -50,7 +50,7 @@ The following attributes are exported:
 * `name` - The name of the datacenter
 
 * `description` - The description of the datacenter
-  
+
 * `resource_id` - The resource_uid of the datacenter as reported by the rightscale platform
 
 * `links` - Hrefs of related API resources

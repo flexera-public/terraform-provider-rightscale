@@ -36,7 +36,7 @@ The following arguments are supported:
 
   * `name` - (Optional) Security group name.  Pattern match.
 
-  * `resource_uid` - (Optional) Cloud resource uid for security group.
+  * `resource_uid` - (Optional) Cloud resource uid for security group.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
   * `network_href` - (Optional) Network href that security group is created in.
 

@@ -40,7 +40,7 @@ func dataSourceSubnet() *schema.Resource {
 						},
 						"resource_uid": {
 							Type:        schema.TypeString,
-							Description: "cloud ID of subnet - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
+							Description: "cloud ID - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -129,6 +129,7 @@ func resourceSubnetRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	if len(res) == 0 {
 		return nil
 	}

@@ -46,7 +46,7 @@ func dataSourceNetwork() *schema.Resource {
 						},
 						"resource_uid": {
 							Type:        schema.TypeString,
-							Description: "cloud ID of network, e.g. 'vpc-2124fe46'",
+							Description: "cloud ID - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -97,6 +97,16 @@ func dataSourceNetwork() *schema.Resource {
 func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(rsc.Client)
 	loc := &rsc.Locator{Namespace: "rs_cm", Type: "networks"}
+
+	// if 'resource_uid' filter is set, we expect it to show up.
+	// retry for 5 min to allow rightscale to poll cloud to discover.
+	if uidset := cmUIDSet(d); uidset {
+		timeout := 300
+		err := cmIndexRetry(client, loc, "networks", d, timeout)
+		if err != nil {
+			return err
+		}
+	}
 
 	res, err := client.List(loc, "", cmFilters(d))
 	if err != nil {

@@ -67,7 +67,7 @@ The following arguments are supported:
 
   * `visibility` (Optional) Image visibility as displayed in cm platform.  Options are "private" or "public."  Defaults to "private."
 
-  * `resource_uid` (Optional) Image resource_uid as displayed in cm platform.
+  * `resource_uid` (Optional) Image resource_uid.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
   * `name` - (Optional) Image name as displayed in cm platform.  Pattern match.
 

@@ -50,7 +50,7 @@ func dataSourceSSHKey() *schema.Resource {
 						},
 						"resource_uid": {
 							Type:        schema.TypeString,
-							Description: "cloud ID of SSH key",
+							Description: "cloud ID - if this filter is set additional retry logic will fire to allow for cloud resource discovery",
 							Optional:    true,
 							ForceNew:    true,
 						},
@@ -88,6 +88,16 @@ func datasourceSSHKeyRead(d *schema.ResourceData, m interface{}) error {
 	acParams["view"] = d.Get("view").(string)
 
 	loc := &rsc.Locator{Namespace: "rs_cm", Href: cloud, ActionParams: acParams}
+
+	// if 'resource_uid' filter is set, we expect it to show up.
+	// retry for 5 min to allow rightscale to poll cloud to discover.
+	if uidset := cmUIDSet(d); uidset {
+		timeout := 300
+		err := cmIndexRetry(client, loc, "ssh_keys", d, timeout)
+		if err != nil {
+			return err
+		}
+	}
 
 	res, err := client.List(loc, "ssh_keys", cmFilters(d))
 	if err != nil {

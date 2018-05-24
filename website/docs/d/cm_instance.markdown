@@ -61,8 +61,8 @@ The following arguments are supported:
   * `public_ip` - The public IP of the instance
 
   * `private_ip` - The private IP of the instance
-  
-  * `resource_uid` - The resource_uid of the instance
+
+  * `resource_uid` - The resource_uid of the instance.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
   * `deployment_href` - The href of the [deployment](http://docs.rightscale.com/cm/dashboard/manage/deployments/) that contains the instance (e.g. /api/deployments/594684003)
 
