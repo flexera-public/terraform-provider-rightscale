@@ -428,8 +428,7 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 		return nil, err
 	}
 
-	serverSourceRcl := fmt.Sprintf(`
-		define main() return $href, $fields do
+	serverSourceRcl := fmt.Sprintf(`define main() return $href, $fields do
 			$href = ""
 			@server = rs_cm.servers.empty()
 			sub timeout: 1h do
@@ -443,18 +442,19 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 				end
 				call tf_server_wait_for_provision(@server) retrieve @server
 				$res = to_object(@res)
-			end
-
-			$final_state = @server.state
-			if $final_state == "operational"
-				$res = to_object(@server)
-			    $fields = to_json($res["details"][0])
-			    @server = rs_cm.get(href: @server.href)
-			else
-    			$server_name = @server.name
-    			raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href
-			end
-		end	
+				$final_state = @server.state
+				if $final_state == "operational"
+            $href = @server.href
+					  $res = to_object(@server)
+				    $fields = to_json($res["details"][0])
+				    @server = rs_cm.get(href: @server.href)
+				else
+	    			$server_name = @server.name
+            $href = @server.href
+	    			raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href
+				end
+			end	
+		end
 
 		define resource_add_tags($href, $tags) do
 			rs_cm.tags.multi_add(resource_hrefs: $href, tags: $tags)

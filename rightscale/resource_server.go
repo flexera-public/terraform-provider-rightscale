@@ -15,6 +15,7 @@ import (
 //     image_href = "/api/clouds/1234/images/1234"
 //     instance_type_href = "/api/clouds/1234/instance_types/1234"
 //     name = "web_instance"
+//     tags = [ "pantaloons"]
 //     server_template_href = "/api/server_templates/1234"
 //     inputs {
 //       FOO = "text:bar"
@@ -35,6 +36,12 @@ func resourceServer() *schema.Resource {
 			"deployment_href": &schema.Schema{
 				Description: "ID of deployment in which to create server",
 				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"tags": &schema.Schema{
+				Description: "Tags to apply to server and associated instance",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 			},
 			"description": &schema.Schema{
@@ -103,7 +110,7 @@ func serverWriteFields(d *schema.ResourceData) rsc.Fields {
 	}
 	for _, f := range []string{
 		"deployment_href", "description", "name", "resource_group_href",
-		"server_tag_scope",
+		"server_tag_scope", "tags",
 	} {
 		if v, ok := d.GetOk(f); ok {
 			fields[f] = v

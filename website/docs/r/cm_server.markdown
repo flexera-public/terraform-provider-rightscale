@@ -16,6 +16,7 @@ Use this resource to create, update or destroy a RightScale server.
 resource "rightscale_server" "web_server" {
   name = "web_server"
   deployment_href = "/api/deployments/1234"
+  tags = [ "role:web_server=true" ]
   instance {
     cloud_href = "/api/clouds/1234"
     image_href = "/api/clouds/1234/images/1234"
@@ -45,6 +46,8 @@ The following arguments are supported:
 * `optimized` - (Optional) A flag indicating whether Instances of this Server should be optimized for high-performance volumes
 
 * `cloud_href` - (Required) The ID of the cloud with the ssh key you want
+
+* `tags` - (Optional) Any tags you want attached to the server and any instances created from this server object
 
 ## Attributes Reference
 
