@@ -1,6 +1,7 @@
 package rsc
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -25,13 +26,13 @@ import (
 //     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
-func launchMockServer(t *testing.T) *httptest.Server {
+func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 	retries := 3
 	return httptest.NewServer(http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			var (
 				response  = ""
-				projectID = validProjectID(t)
+				projectID = 24
 			)
 
 			t.Logf("URL: %s", request.URL.Path)
@@ -86,8 +87,15 @@ func launchMockServer(t *testing.T) *httptest.Server {
 				}]`
 				response = fmt.Sprintf(response, projectID, projectID+3)
 			case fmt.Sprintf("/cwf/v1/accounts/%d/processes", projectID):
-				writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d799a17cac6ee9ebd62a", projectID))
-			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b06d799a17cac6ee9ebd62a", projectID):
+				switch testCase {
+				case "runProcess":
+					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d1b51c028800360030f9", projectID))
+				case "createServer":
+					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b082948a17cac6ee9ece729", projectID))
+				default:
+					panic(fmt.Errorf("Unknown testCase: %s", testCase))
+				}
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b06d1b51c028800360030f9", projectID):
 				response = `
 				{
 					"id": "5b06d1b51c028800360030f9",
@@ -140,13 +148,127 @@ func launchMockServer(t *testing.T) *httptest.Server {
 								}
 							}`
 				retries = retries - 1
-				if retries == 0 {
-					response = fmt.Sprintf(response, outputs)
-				} else {
+				if retries > 0 {
 					response = fmt.Sprintf(response, "")
+				} else {
+					response = fmt.Sprintf(response, outputs)
+				}
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b082948a17cac6ee9ece729", projectID):
+				response_running := `
+				{
+					"id": "5b082948a17cac6ee9ece729",
+					"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729",
+					"name": "0nwzhxbpxdn2z",
+					"tasks": [
+						{
+							"id": "5b082948a17cac6ee9ece728",
+							"href": "/accounts/62656/tasks/5b082948a17cac6ee9ece728",
+							"name": "/root",
+							"progress": {
+								"percent": 60,
+								"summary": "Retrieving field 'state'",
+								"expression": {
+									"id": "5b0829971136b00001909e2c",
+									"href": "/accounts//expressions/5b0829971136b00001909e2c",
+									"source": "@server.state",
+									"variables": [],
+									"references": []
+								}
+							},
+							"status": "activity",
+							"created_at": "2018-05-25T15:18:32.054Z",
+							"updated_at": "2018-05-25T15:18:32.054Z"
+						}
+					],
+					"outputs": [],
+					"references": [],
+					"variables": [],
+					"source": "define main() return $href, $fields do\n\t$href = \"\"\n\t@server = rs_cm.servers.empty()\n\tsub timeout: 1h do\n\t\t@res = {\"fields\":{\"server\":{\"deployment_href\":\"/api/deployments/936965004\",\"instance\":{\"associate_public_ip_address\":true,\"cloud_href\":\"/api/clouds/1\",\"image_href\":\"/api/clouds/1/images/E0HCVNHNAV8KK\",\"instance_type_href\":\"/api/clouds/1/instance_types/9K1AU4K4RCBU4\",\"ip_forwarding_enabled\":false,\"name\":\"terraform-test-instance-7hcxelcntc-29ley7ipse\",\"server_template_href\":\"/api/server_templates/402254004\",\"subnet_hrefs\":[\"/api/clouds/1/subnets/52NUHI2B8LVH1\"]},\"name\":\"terraform-test-server-7hcxelcntc-8k8ae2u7ia\"}},\"namespace\":\"rs_cm\",\"type\":\"servers\"}\n\t\tcall server_provision_tf(@res) retrieve @server\n\t\t$href   = @server.href\n\t\t$res    = to_object(@res)\n\tend\n$final_state = @server.state\n\tif $final_state == \"operational\"\n\t\t$res = to_object(@server)\n    $fields = to_json($res[\"details\"][0])\n    @server = rs_cm.get(href: @server.href)\n  else\n    $server_name = @server.name\n    raise \"Failed to provision server. Expected state 'operational' but got '\" + $final_state + \"' for server: \" + $server_name + \" at href: \" + $href\nend\nend\n# custom provision that does not auto-cleanup on error\n\tdefine server_provision_tf(@res) return @server do\n\t\t# use RS canned provision to create\n\t\tcall rs__cwf_simple_provision(@res) retrieve @server\n\t\t$object = to_object(@res)\n\t\t# use custom launch to avoid cleanup on error\n\t\tcall tf_server_wait_for_provision(@server) retrieve @server\n\tend\n\n\tdefine tf_server_wait_for_provision(@server) return @server do\n\t\t$server_name = to_s(@server.name)\n\t\tsub on_error: tf_server_handle_launch_failure(@server) do\n\t\t\t@server.launch()\n\t\tend\n\t\t$final_state = \"launching\"\n\t\t# use RS canned logic to capture launching server state\n\t\tsub on_error: rs__cwf_skip_any_error() do\n\t\t\tsleep_until @server.state =~ \"^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$\"\n\t\t\t$final_state = @server.state\n\t\tend\n\tend\n\n\t# spit out error from launch call\n\tdefine tf_server_handle_launch_failure(@server) do\n\t\t$server_name = @server.name\n\t\tif $_errors \u0026\u0026 $_errors[0] \u0026\u0026 $_errors[0][\"response\"]\n\t\t\traise \"Error trying to launch server (\" + $server_name + \"): \" + $_errors[0][\"response\"][\"body\"]\n\t\telse\n\t\t\traise \"Error trying to launch server (\" + $server_name + \")\"\n\t\tend\n\tend\n",
+					"main": "define main() return $href, $fields do\n|   $href = \"\"\n|   @server = rs_cm.servers.empty()\n|   sub timeout: \"1h\" do\n|   |   @res = { \"fields\": { \"server\": { \"deployment_href\": \"/api/deployments/936965004\", \"instance\": { \"associate_public_ip_address\": true, \"cloud_href\": \"/api/clouds/1\", \"image_href\": \"/api/clouds/1/images/E0HCVNHNAV8KK\", \"instance_type_href\": \"/api/clouds/1/instance_types/9K1AU4K4RCBU4\", \"ip_forwarding_enabled\": false, \"name\": \"terraform-test-instance-7hcxelcntc-29ley7ipse\", \"server_template_href\": \"/api/server_templates/402254004\", \"subnet_hrefs\": [\"/api/clouds/1/subnets/52NUHI2B8LVH1\"] }, \"name\": \"terraform-test-server-7hcxelcntc-8k8ae2u7ia\" } }, \"namespace\": \"rs_cm\", \"type\": \"servers\" }\n|   |   call server_provision_tf(@res) retrieve @server\n|   |   $href = @server.href\n|   |   $res = to_object(@res)\n|   end\n|   $final_state = @server.state\n|   if $final_state == \"operational\"\n|   |   $res = to_object(@server)\n|   |   $fields = to_json($res[\"details\"][0])\n|   |   @server = rs_cm.get({ \"href\": @server.href })\n|   elsif true|   |   $server_name = @server.name\n|   |   raise \"Failed to provision server. Expected state 'operational' but got '\" + $final_state + \"' for server: \" + $server_name + \" at href: \" + $href\n|   end\nend",
+					"parameters": [],
+					"application": "cwfconsole",
+					"created_by": {
+						"email": "support@rightscale.com",
+						"id": 0,
+						"name": "Terraform"
+					},
+					"created_at": "2018-05-25T15:18:32.054Z",
+					"updated_at": "2018-05-25T15:18:33.978Z",
+					"status": "running",
+					"links": {
+						"tasks": {
+							"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729/tasks"
+						}
+					}
+				}
+				`
+				response_completed := `
+				{
+					"id": "5b082948a17cac6ee9ece729",
+					"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729",
+					"name": "0nwzhxbpxdn2z",
+					"tasks": [
+						{
+							"id": "5b082948a17cac6ee9ece728",
+							"href": "/accounts/62656/tasks/5b082948a17cac6ee9ece728",
+							"name": "/root",
+							"progress": {
+								"percent": 100,
+								"summary": ""
+							},
+							"status": "completed",
+							"created_at": "2018-05-25T15:18:32.054Z",
+							"updated_at": "2018-05-25T15:18:32.054Z",
+							"finished_at": "2018-05-25T15:19:54.377Z"
+						}
+					],
+					"outputs": [
+						{
+							"name": "$href",
+							"value": {
+								"kind": "string",
+								"value": "/api/servers/1797452004"
+							}
+						},
+						{
+							"name": "$fields",
+							"value": {
+								"kind": "string",
+								"value": "{\"created_at\":\"2018/05/25 15:18:36 +0000\",\"description\":null,\"links\":[{\"rel\":\"self\",\"href\":\"/api/servers/1797452004\"},{\"href\":\"/api/deployments/936965004\",\"rel\":\"deployment\"},{\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU\",\"rel\":\"next_instance\"},{\"href\":\"/api/servers/1797452004/alert_specs\",\"rel\":\"alert_specs\"},{\"href\":\"/api/servers/1797452004/alerts\",\"rel\":\"alerts\"}],\"name\":\"terraform-test-server-7hcxelcntc-8k8ae2u7ia\",\"next_instance\":{\"private_ip_addresses\":[],\"state\":\"inactive\",\"name\":\"terraform-test-server-7hcxelcntc-8k8ae2u7ia\",\"cloud_specific_attributes\":{},\"created_at\":\"2018/05/25 15:18:36 +0000\",\"ip_forwarding_enabled\":false,\"public_ip_addresses\":[],\"updated_at\":\"2018/05/25 15:18:36 +0000\",\"associate_public_ip_address\":true,\"links\":[{\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU\",\"rel\":\"self\"},{\"rel\":\"cloud\",\"href\":\"/api/clouds/1\"},{\"href\":\"/api/deployments/936965004\",\"rel\":\"deployment\"},{\"href\":\"/api/server_templates/402254004\",\"rel\":\"server_template\"},{\"inherited_source\":\"server_template\",\"rel\":\"multi_cloud_image\",\"href\":\"/api/multi_cloud_images/442090004\"},{\"href\":\"/api/servers/1797452004\",\"rel\":\"parent\"},{\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU/volume_attachments\",\"rel\":\"volume_attachments\"},{\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU/inputs\",\"rel\":\"inputs\"},{\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU/monitoring_metrics\",\"rel\":\"monitoring_metrics\"},{\"rel\":\"alerts\",\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU/alerts\"},{\"href\":\"/api/clouds/1/instances/FEHVIJTCERGGU/alert_specs\",\"rel\":\"alert_specs\"}],\"pricing_type\":\"fixed\",\"resource_uid\":\"e53da384-602e-11e8-97b9-0242ac110002\",\"actions\":[{\"rel\":\"launch\"}],\"locked\":false},\"state\":\"inactive\",\"updated_at\":\"2018/05/25 15:18:36 +0000\",\"actions\":[{\"rel\":\"launch\"},{\"rel\":\"clone\"}]}"
+							}
+						}
+					],
+					"references": [],
+					"variables": [],
+					"source": "define main() return $href, $fields do\n\t$href = \"\"\n\t@server = rs_cm.servers.empty()\n\tsub timeout: 1h do\n\t\t@res = {\"fields\":{\"server\":{\"deployment_href\":\"/api/deployments/936965004\",\"instance\":{\"associate_public_ip_address\":true,\"cloud_href\":\"/api/clouds/1\",\"image_href\":\"/api/clouds/1/images/E0HCVNHNAV8KK\",\"instance_type_href\":\"/api/clouds/1/instance_types/9K1AU4K4RCBU4\",\"ip_forwarding_enabled\":false,\"name\":\"terraform-test-instance-7hcxelcntc-29ley7ipse\",\"server_template_href\":\"/api/server_templates/402254004\",\"subnet_hrefs\":[\"/api/clouds/1/subnets/52NUHI2B8LVH1\"]},\"name\":\"terraform-test-server-7hcxelcntc-8k8ae2u7ia\"}},\"namespace\":\"rs_cm\",\"type\":\"servers\"}\n\t\tcall server_provision_tf(@res) retrieve @server\n\t\t$href   = @server.href\n\t\t$res    = to_object(@res)\n\tend\n$final_state = @server.state\n\tif $final_state == \"operational\"\n\t\t$res = to_object(@server)\n    $fields = to_json($res[\"details\"][0])\n    @server = rs_cm.get(href: @server.href)\n  else\n    $server_name = @server.name\n    raise \"Failed to provision server. Expected state 'operational' but got '\" + $final_state + \"' for server: \" + $server_name + \" at href: \" + $href\nend\nend\n# custom provision that does not auto-cleanup on error\n\tdefine server_provision_tf(@res) return @server do\n\t\t# use RS canned provision to create\n\t\tcall rs__cwf_simple_provision(@res) retrieve @server\n\t\t$object = to_object(@res)\n\t\t# use custom launch to avoid cleanup on error\n\t\tcall tf_server_wait_for_provision(@server) retrieve @server\n\tend\n\n\tdefine tf_server_wait_for_provision(@server) return @server do\n\t\t$server_name = to_s(@server.name)\n\t\tsub on_error: tf_server_handle_launch_failure(@server) do\n\t\t\t@server.launch()\n\t\tend\n\t\t$final_state = \"launching\"\n\t\t# use RS canned logic to capture launching server state\n\t\tsub on_error: rs__cwf_skip_any_error() do\n\t\t\tsleep_until @server.state =~ \"^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$\"\n\t\t\t$final_state = @server.state\n\t\tend\n\tend\n\n\t# spit out error from launch call\n\tdefine tf_server_handle_launch_failure(@server) do\n\t\t$server_name = @server.name\n\t\tif $_errors \u0026\u0026 $_errors[0] \u0026\u0026 $_errors[0][\"response\"]\n\t\t\traise \"Error trying to launch server (\" + $server_name + \"): \" + $_errors[0][\"response\"][\"body\"]\n\t\telse\n\t\t\traise \"Error trying to launch server (\" + $server_name + \")\"\n\t\tend\n\tend\n",
+					"main": "define main() return $href, $fields do\n|   $href = \"\"\n|   @server = rs_cm.servers.empty()\n|   sub timeout: \"1h\" do\n|   |   @res = { \"fields\": { \"server\": { \"deployment_href\": \"/api/deployments/936965004\", \"instance\": { \"associate_public_ip_address\": true, \"cloud_href\": \"/api/clouds/1\", \"image_href\": \"/api/clouds/1/images/E0HCVNHNAV8KK\", \"instance_type_href\": \"/api/clouds/1/instance_types/9K1AU4K4RCBU4\", \"ip_forwarding_enabled\": false, \"name\": \"terraform-test-instance-7hcxelcntc-29ley7ipse\", \"server_template_href\": \"/api/server_templates/402254004\", \"subnet_hrefs\": [\"/api/clouds/1/subnets/52NUHI2B8LVH1\"] }, \"name\": \"terraform-test-server-7hcxelcntc-8k8ae2u7ia\" } }, \"namespace\": \"rs_cm\", \"type\": \"servers\" }\n|   |   call server_provision_tf(@res) retrieve @server\n|   |   $href = @server.href\n|   |   $res = to_object(@res)\n|   end\n|   $final_state = @server.state\n|   if $final_state == \"operational\"\n|   |   $res = to_object(@server)\n|   |   $fields = to_json($res[\"details\"][0])\n|   |   @server = rs_cm.get({ \"href\": @server.href })\n|   elsif true|   |   $server_name = @server.name\n|   |   raise \"Failed to provision server. Expected state 'operational' but got '\" + $final_state + \"' for server: \" + $server_name + \" at href: \" + $href\n|   end\nend",
+					"parameters": [],
+					"application": "cwfconsole",
+					"created_by": {
+						"email": "support@rightscale.com",
+						"id": 0,
+						"name": "Terraform"
+					},
+					"created_at": "2018-05-25T15:18:32.054Z",
+					"updated_at": "2018-05-25T15:18:33.978Z",
+					"finished_at": "2018-05-25T15:19:54.382Z",
+					"status": "completed",
+					"links": {
+						"tasks": {
+							"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729/tasks"
+						}
+					}
+				}`
+
+				retries = retries - 1
+				if retries > 0 {
+					response = response_running
+				} else {
+					response = response_completed
 				}
 			default:
 				// TODO write a log line warning of unknown PATH
+				panic(fmt.Errorf("Received unknown PATH: %s", request.URL.Path))
 				return
 			}
 			if len(response) > 0 {
@@ -157,7 +279,7 @@ func launchMockServer(t *testing.T) *httptest.Server {
 		}))
 }
 func TestRunProcess(t *testing.T) {
-	service := launchMockServer(t)
+	service := launchMockServer(t, "runProcess")
 
 	rb := rshosts
 	hin := httpclient.Insecure
@@ -169,7 +291,7 @@ func TestRunProcess(t *testing.T) {
 	httpclient.Insecure = true
 	rshosts = []string{service.URL}
 
-	client, err := New(validToken(t), validProjectID(t))
+	client, err := New("usingMockServer", 24)
 	if err != nil {
 		t.Errorf("got error %q, expected none", err)
 	}
@@ -186,6 +308,18 @@ end
 	if process.Outputs["$res"] != "42" {
 		t.Errorf("got $res equal %s, expected 42", process.Outputs["$res"])
 	}
+
+	client{
+		APIToken:  token,
+		ProjectID: projectID,
+		rs:        rs,
+	}
+	Locator{
+		Href: "/accounts/42/processes/5b06d1b51c028800360030f9"
+		Namespace: "rs_cwf"
+		Type: ""
+	}
+	client.Get
 }
 func TestAuthenticate(t *testing.T) {
 	token := validToken(t)
@@ -312,6 +446,66 @@ func TestCreate(t *testing.T) {
 	if d["description"].(string) != deplDesc {
 		t.Errorf("got deployment with description %v, expected %q", d["description"], deplDesc)
 	}
+}
+
+func TestCreateServer(t *testing.T) {
+	service := launchMockServer(t, "createServer")
+
+	rb := rshosts
+	hin := httpclient.Insecure
+	defer func() {
+		rshosts = rb
+		httpclient.Insecure = hin
+		service.Close()
+	}()
+	httpclient.Insecure = true
+	rshosts = []string{service.URL}
+
+	client, err := New("usingMockServer", 42)
+	if err != nil {
+		t.Errorf("got error %q, expected none", err)
+	}
+
+	fields := `
+	{
+		"server": {
+			"deployment_href": "/api/deployments/936965004",
+			"instance": {
+				"associate_public_ip_address": true,
+				"cloud_href": "/api/clouds/1",
+				"datacenter_href": "",
+				"deployment_href": "",
+				"image_href": "/api/clouds/1/images/E0HCVNHNAV8KK",
+				"instance_type_href": "/api/clouds/1/instance_types/9K1AU4K4RCBU4",
+				"ip_forwarding_enabled": false,
+				"kernel_image_href": "",
+				"name": "terraform-test-instance-7hcxelcntc-29ley7ipse",
+				"placement_group_href": "",
+				"ramdisk_image_href": "",
+				"security_group_hrefs": [],
+				"server_template_href": "/api/server_templates/402254004",
+				"ssh_key_href": "",
+				"subnet_hrefs": [
+					"/api/clouds/1/subnets/52NUHI2B8LVH1"
+				],
+				"user_data": ""
+			},
+			"name": "terraform-test-server-7hcxelcntc-8k8ae2u7ia"
+		}
+	}`
+
+	var fs Fields
+	err = json.Unmarshal([]byte(fields), &fs)
+	if err != nil {
+		t.Errorf("got error %q, expected none", err)
+		return
+	}
+	_, err = client.CreateServer("rs_cm", "servers", fs)
+	if err != nil {
+		t.Errorf("got error %q, expected none", err)
+		return
+	}
+
 }
 
 func TestDelete(t *testing.T) {
