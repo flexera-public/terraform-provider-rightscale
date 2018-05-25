@@ -630,7 +630,7 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 			var res map[string]interface{}
 			{
 				var r interface{}
-				r, err = rsc.requestCWF("get", "/cwf/v1/"+processHref, rsapi.APIParams{"view": "expanded"}, nil)
+				r, err = rsc.requestCWF("get", "/cwf/v1"+processHref, rsapi.APIParams{"view": "expanded"}, nil)
 				if err == nil {
 					res = r.(map[string]interface{})
 				}
