@@ -1,7 +1,10 @@
 package rsc
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
 	"strconv"
@@ -9,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/rightscale/rsc/httpclient"
 	"github.com/rightscale/rsc/rsapi"
 )
 
@@ -22,6 +26,178 @@ import (
 //     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
+func testRunProcessResponse(withOutputs bool) string {
+	res := `
+	{
+		"id": "5b06d1b51c028800360030f9",
+		"href": "/accounts/62656/processes/5b06d1b51c028800360030f9",
+		"name": "07ppy1wzmcsk4",
+		"tasks": [
+			{
+				"id": "5b06d1b51c028800360030f8",
+				"href": "/accounts/62656/tasks/5b06d1b51c028800360030f8",
+				"name": "/root",
+				"progress": {
+					"percent": 100,
+					"summary": ""
+				},
+				"status": "completed",
+				"created_at": "2018-05-24T14:52:37.500Z",
+				"updated_at": "2018-05-24T14:52:37.500Z",
+				"finished_at": "2018-05-24T14:52:41.157Z"
+			}
+		],
+		"outputs": [
+			%s
+		],
+		"references": [],
+		"variables": [],
+		"source": "define main() return $res do\n\t$res = 11 + 31\nend\n",
+		"main": "define main() return $res do\n|   $res = 11 + 31\nend",
+		"parameters": [],
+		"application": "cwfconsole",
+		"created_by": {
+			"email": "support@rightscale.com",
+			"id": 0,
+			"name": "Terraform"
+		},
+		"created_at": "2018-05-24T14:52:37.500Z",
+		"updated_at": "2018-05-24T14:52:41.121Z",
+		"finished_at": "2018-05-24T14:52:41.162Z",
+		"status": "completed",
+		"links": {
+			"tasks": {
+				"href": "/accounts/62656/processes/5b06d1b51c028800360030f9/tasks"
+			}
+		}
+	}`
+	outputs := `{
+					"name": "$res",
+					"value": {
+						"kind": "number",
+						"value": 42
+					}
+				}`
+	if withOutputs {
+		return fmt.Sprintf(res, outputs)
+	}
+	return fmt.Sprintf(res, "")
+}
+func TestRunProcess(t *testing.T) {
+	// Launch mock API server
+	retries := 3
+	service := httptest.NewServer(http.HandlerFunc(
+		func(writer http.ResponseWriter, request *http.Request) {
+			var err error
+			projectID := validProjectID(t)
+
+			switch request.URL.Path {
+			case "/api/oauth2":
+				response := map[string]interface{}{
+					"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE1MjcxNzg0MzcsImlhdCI6MTUyNzE3MTIzNywiaWQiOiIzYVFyY21QRTBHUSIsImltcGVyc29uYXRvciI6ODQ1NjUsImlzcyI6InVzLTQiLCJ1c2VyIjo4MDI3MH0.IAavD470wFtPm-AbaEiyAPFGd75HJ_zD0MwssoM6BZv5v361FrQX8diuUgCqoakCKCrOTH-LQ0Til3LmZud-dQNBm7SJzrKy2BfzsrerPT3dWTyOf4f3aWtd0_EpVOKX8jaYn-AAAAAu3Yq8VI7XmkRFvGPk8JFbksE1YSs7j4M.eyJhY2NvdW50IjoxMDUyOTB9",
+					"token_type":   "bearer",
+					"expires_in":   7200,
+				}
+				var raw []byte
+				raw, err = json.Marshal(response)
+				if err == nil {
+					h := writer.Header()
+					h.Set("Content-Type", "application/json")
+					writer.Write(raw)
+				} else {
+					err = fmt.Errorf("Error A: %s", err)
+				}
+			case "/api/sessions", "/api/sessions/accounts":
+				response := []interface{}{
+					map[string]interface{}{
+						"name":       "Account one",
+						"created_at": "2008/08/01 17:09:31 +0000",
+						"updated_at": "2018/04/25 06:19:43 +0000",
+						"links": []interface{}{
+							map[string]interface{}{
+								"rel":  "self",
+								"href": fmt.Sprintf("/api/accounts/%d", projectID),
+							},
+							map[string]interface{}{
+								"rel":  "owner",
+								"href": "/api/users/1",
+							},
+							map[string]interface{}{
+								"rel":  "cluster",
+								"href": "/api/clusters/3",
+							},
+						},
+					},
+					map[string]interface{}{
+						"name":       "Another account",
+						"created_at": "2008/08/01 17:01:31 +0000",
+						"updated_at": "2018/04/25 06:11:43 +0000",
+						"links": []interface{}{
+							map[string]interface{}{
+								"rel":  "self",
+								"href": fmt.Sprintf("/api/accounts/%d", projectID+42),
+							},
+							map[string]interface{}{
+								"rel":  "owner",
+								"href": "/api/users/13",
+							},
+							map[string]interface{}{
+								"rel":  "cluster",
+								"href": "/api/clusters/24",
+							},
+						},
+					},
+				}
+
+				var raw []byte
+				raw, err = json.Marshal(response)
+				if err == nil {
+					h := writer.Header()
+					h.Set("Content-Type", "application/json")
+					writer.Write(raw)
+				} else {
+					err = fmt.Errorf("Error A: %s", err)
+				}
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes", projectID):
+				writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d799a17cac6ee9ebd62a", projectID))
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b06d799a17cac6ee9ebd62a", projectID):
+				response := testRunProcessResponse(false)
+				retries = retries - 1
+				if retries == 0 {
+					response = testRunProcessResponse(true)
+				}
+				h := writer.Header()
+				h.Set("Content-Type", "application/json")
+				writer.Write([]byte(response))
+			}
+		}))
+	rb := rshosts
+	hin := httpclient.Insecure
+	defer func() {
+		rshosts = rb
+		httpclient.Insecure = hin
+	}()
+	httpclient.Insecure = true
+	rshosts = []string{service.URL}
+
+	client, err := New(validToken(t), validProjectID(t))
+	if err != nil {
+		t.Errorf("got error %q, expected none", err)
+	}
+
+	source := `define main() return $res do
+	$res = 11 + 31
+end
+`
+	process, err := client.RunProcess(source, nil)
+	if err != nil {
+		t.Errorf("got error %q, expected none", err)
+		return
+	}
+	if process.Outputs["$res"] != "42" {
+		t.Errorf("got $res equal %s, expected 42", process.Outputs["$res"])
+	}
+}
 func TestAuthenticate(t *testing.T) {
 	token := validToken(t)
 	project := validProjectID(t)
