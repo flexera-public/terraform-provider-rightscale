@@ -116,9 +116,9 @@ func resourceSubnetRead(d *schema.ResourceData, m interface{}) error {
 	loc := &rsc.Locator{Namespace: "rs_cm", Href: cloud}
 
 	// if 'resource_uid' filter is set, we expect it to show up.
-	// retry for 5 min to allow rightscale to poll cloud to discover.
+	// retry for 10 min to allow rightscale to poll cloud to discover.
 	if uidset := cmUIDSet(d); uidset {
-		timeout := 300
+		timeout := 600
 		err := cmIndexRetry(client, loc, "subnets", d, timeout)
 		if err != nil {
 			return err
