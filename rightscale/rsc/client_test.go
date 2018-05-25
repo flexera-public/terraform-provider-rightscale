@@ -1,7 +1,6 @@
 package rsc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -26,156 +25,146 @@ import (
 //     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
-func testRunProcessResponse(withOutputs bool) string {
-	res := `
-	{
-		"id": "5b06d1b51c028800360030f9",
-		"href": "/accounts/62656/processes/5b06d1b51c028800360030f9",
-		"name": "07ppy1wzmcsk4",
-		"tasks": [
-			{
-				"id": "5b06d1b51c028800360030f8",
-				"href": "/accounts/62656/tasks/5b06d1b51c028800360030f8",
-				"name": "/root",
-				"progress": {
-					"percent": 100,
-					"summary": ""
-				},
-				"status": "completed",
-				"created_at": "2018-05-24T14:52:37.500Z",
-				"updated_at": "2018-05-24T14:52:37.500Z",
-				"finished_at": "2018-05-24T14:52:41.157Z"
-			}
-		],
-		"outputs": [
-			%s
-		],
-		"references": [],
-		"variables": [],
-		"source": "define main() return $res do\n\t$res = 11 + 31\nend\n",
-		"main": "define main() return $res do\n|   $res = 11 + 31\nend",
-		"parameters": [],
-		"application": "cwfconsole",
-		"created_by": {
-			"email": "support@rightscale.com",
-			"id": 0,
-			"name": "Terraform"
-		},
-		"created_at": "2018-05-24T14:52:37.500Z",
-		"updated_at": "2018-05-24T14:52:41.121Z",
-		"finished_at": "2018-05-24T14:52:41.162Z",
-		"status": "completed",
-		"links": {
-			"tasks": {
-				"href": "/accounts/62656/processes/5b06d1b51c028800360030f9/tasks"
-			}
-		}
-	}`
-	outputs := `{
-					"name": "$res",
-					"value": {
-						"kind": "number",
-						"value": 42
-					}
-				}`
-	if withOutputs {
-		return fmt.Sprintf(res, outputs)
-	}
-	return fmt.Sprintf(res, "")
-}
-func TestRunProcess(t *testing.T) {
-	// Launch mock API server
+func launchMockServer(t *testing.T) *httptest.Server {
 	retries := 3
-	service := httptest.NewServer(http.HandlerFunc(
+	return httptest.NewServer(http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
-			var err error
-			projectID := validProjectID(t)
+			var (
+				response  = ""
+				projectID = validProjectID(t)
+			)
 
+			t.Logf("URL: %s", request.URL.Path)
 			switch request.URL.Path {
 			case "/api/oauth2":
-				response := map[string]interface{}{
-					"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE1MjcxNzg0MzcsImlhdCI6MTUyNzE3MTIzNywiaWQiOiIzYVFyY21QRTBHUSIsImltcGVyc29uYXRvciI6ODQ1NjUsImlzcyI6InVzLTQiLCJ1c2VyIjo4MDI3MH0.IAavD470wFtPm-AbaEiyAPFGd75HJ_zD0MwssoM6BZv5v361FrQX8diuUgCqoakCKCrOTH-LQ0Til3LmZud-dQNBm7SJzrKy2BfzsrerPT3dWTyOf4f3aWtd0_EpVOKX8jaYn-AAAAAu3Yq8VI7XmkRFvGPk8JFbksE1YSs7j4M.eyJhY2NvdW50IjoxMDUyOTB9",
-					"token_type":   "bearer",
-					"expires_in":   7200,
-				}
-				var raw []byte
-				raw, err = json.Marshal(response)
-				if err == nil {
-					h := writer.Header()
-					h.Set("Content-Type", "application/json")
-					writer.Write(raw)
-				} else {
-					err = fmt.Errorf("Error A: %s", err)
-				}
+				response = `
+				{
+					"access_token": "%s",
+					"expires_in": 7200,
+					"token_type": "bearer"
+				}`
+				response = fmt.Sprintf(response, acctest.RandString(370)) // access_token
 			case "/api/sessions", "/api/sessions/accounts":
-				response := []interface{}{
-					map[string]interface{}{
-						"name":       "Account one",
-						"created_at": "2008/08/01 17:09:31 +0000",
-						"updated_at": "2018/04/25 06:19:43 +0000",
-						"links": []interface{}{
-							map[string]interface{}{
-								"rel":  "self",
-								"href": fmt.Sprintf("/api/accounts/%d", projectID),
-							},
-							map[string]interface{}{
-								"rel":  "owner",
-								"href": "/api/users/1",
-							},
-							map[string]interface{}{
-								"rel":  "cluster",
-								"href": "/api/clusters/3",
-							},
+				response = `
+				[{
+					"created_at": "2008/08/01 17:09:31 +0000",
+					"links": [
+						{
+							"href": "/api/accounts/%d",
+							"rel": "self"
 						},
-					},
-					map[string]interface{}{
-						"name":       "Another account",
-						"created_at": "2008/08/01 17:01:31 +0000",
-						"updated_at": "2018/04/25 06:11:43 +0000",
-						"links": []interface{}{
-							map[string]interface{}{
-								"rel":  "self",
-								"href": fmt.Sprintf("/api/accounts/%d", projectID+42),
-							},
-							map[string]interface{}{
-								"rel":  "owner",
-								"href": "/api/users/13",
-							},
-							map[string]interface{}{
-								"rel":  "cluster",
-								"href": "/api/clusters/24",
-							},
+						{
+							"href": "/api/users/1",
+							"rel": "owner"
 						},
-					},
-				}
-
-				var raw []byte
-				raw, err = json.Marshal(response)
-				if err == nil {
-					h := writer.Header()
-					h.Set("Content-Type", "application/json")
-					writer.Write(raw)
-				} else {
-					err = fmt.Errorf("Error A: %s", err)
-				}
+						{
+							"href": "/api/clusters/3",
+							"rel": "cluster"
+						}
+					],
+					"name": "Account one",
+					"updated_at": "2018/04/25 06:19:43 +0000"
+				},
+				{
+					"created_at": "2008/08/01 17:01:31 +0000",
+					"links": [
+						{
+							"href": "/api/accounts/%d",
+							"rel": "self"
+						},
+						{
+							"href": "/api/users/13",
+							"rel": "owner"
+						},
+						{
+							"href": "/api/clusters/24",
+							"rel": "cluster"
+						}
+					],
+					"name": "Another account",
+					"updated_at": "2018/04/25 06:11:43 +0000"
+				}]`
+				response = fmt.Sprintf(response, projectID, projectID+3)
 			case fmt.Sprintf("/cwf/v1/accounts/%d/processes", projectID):
 				writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d799a17cac6ee9ebd62a", projectID))
 			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b06d799a17cac6ee9ebd62a", projectID):
-				response := testRunProcessResponse(false)
+				response = `
+				{
+					"id": "5b06d1b51c028800360030f9",
+					"href": "/accounts/62656/processes/5b06d1b51c028800360030f9",
+					"name": "07ppy1wzmcsk4",
+					"tasks": [
+						{
+							"id": "5b06d1b51c028800360030f8",
+							"href": "/accounts/62656/tasks/5b06d1b51c028800360030f8",
+							"name": "/root",
+							"progress": {
+								"percent": 100,
+								"summary": ""
+							},
+							"status": "completed",
+							"created_at": "2018-05-24T14:52:37.500Z",
+							"updated_at": "2018-05-24T14:52:37.500Z",
+							"finished_at": "2018-05-24T14:52:41.157Z"
+						}
+					],
+					"outputs": [
+						%s
+					],
+					"references": [],
+					"variables": [],
+					"source": "define main() return $res do\n\t$res = 11 + 31\nend\n",
+					"main": "define main() return $res do\n|   $res = 11 + 31\nend",
+					"parameters": [],
+					"application": "cwfconsole",
+					"created_by": {
+						"email": "support@example.com",
+						"id": 0,
+						"name": "Terraform"
+					},
+					"created_at": "2018-05-24T14:52:37.500Z",
+					"updated_at": "2018-05-24T14:52:41.121Z",
+					"finished_at": "2018-05-24T14:52:41.162Z",
+					"status": "completed",
+					"links": {
+						"tasks": {
+							"href": "/accounts/62656/processes/5b06d1b51c028800360030f9/tasks"
+						}
+					}
+				}`
+				outputs := `{
+								"name": "$res",
+								"value": {
+									"kind": "number",
+									"value": 42
+								}
+							}`
 				retries = retries - 1
 				if retries == 0 {
-					response = testRunProcessResponse(true)
+					response = fmt.Sprintf(response, outputs)
+				} else {
+					response = fmt.Sprintf(response, "")
 				}
+			default:
+				// TODO write a log line warning of unknown PATH
+				return
+			}
+			if len(response) > 0 {
 				h := writer.Header()
 				h.Set("Content-Type", "application/json")
 				writer.Write([]byte(response))
 			}
 		}))
+}
+func TestRunProcess(t *testing.T) {
+	service := launchMockServer(t)
+
 	rb := rshosts
 	hin := httpclient.Insecure
 	defer func() {
 		rshosts = rb
 		httpclient.Insecure = hin
+		service.Close()
 	}()
 	httpclient.Insecure = true
 	rshosts = []string{service.URL}
