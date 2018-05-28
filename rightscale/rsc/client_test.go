@@ -3,6 +3,7 @@ package rsc
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -26,16 +27,45 @@ import (
 //     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
+func TestUser(t *testing.T) {
+	service := launchMockServer(t, "runProcess")
+
+	// time.Sleep(300 * time.Second)
+
+	rb := rshosts
+	hin := httpclient.Insecure
+	defer func() {
+		rshosts = rb
+		httpclient.Insecure = hin
+		service.Close()
+	}()
+	httpclient.Insecure = true
+	rshosts = []string{service.URL}
+
+	cl, err := New(validToken(t), validProjectID(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rs := cl.(*client).rs
+
+	t.Logf(" User: %v", getUser(t, rs))
+}
+
 func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 	retries := 3
 	return httptest.NewServer(http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			var (
 				response  = ""
-				projectID = 24
+				projectID = 62656
 			)
 
-			t.Logf("URL: %s", request.URL.Path)
+			t.Logf("%s %s", request.Method, request.URL.Path)
+			payloadBytes, _ := ioutil.ReadAll(request.Body)
+			t.Logf("Payload: %s", string(payloadBytes))
+			t.Logf("Query: %v", request.URL.Query())
+
 			switch request.URL.Path {
 			case "/api/oauth2":
 				response = `
@@ -278,6 +308,7 @@ func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 			}
 		}))
 }
+
 func TestRunProcess(t *testing.T) {
 	service := launchMockServer(t, "runProcess")
 
@@ -308,19 +339,19 @@ end
 	if process.Outputs["$res"] != "42" {
 		t.Errorf("got $res equal %s, expected 42", process.Outputs["$res"])
 	}
-
-	client{
-		APIToken:  token,
-		ProjectID: projectID,
-		rs:        rs,
-	}
-	Locator{
-		Href: "/accounts/42/processes/5b06d1b51c028800360030f9"
-		Namespace: "rs_cwf"
-		Type: ""
-	}
-	client.Get
 }
+
+func TestGet(t *testing.T) {
+	client, _ := New(validToken(t), validProjectID(t))
+	l := Locator{
+		Href:         "/api/deployments/936965004",
+		Namespace:    "rs_cm",
+		Type:         "",
+		ActionParams: nil,
+	}
+	_, _ = client.Get(&l)
+}
+
 func TestAuthenticate(t *testing.T) {
 	token := validToken(t)
 	project := validProjectID(t)
@@ -574,6 +605,28 @@ func showDeployment(t *testing.T, depl string, rs *rsapi.API) map[string]interfa
 	}
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("failed to retrieve deployment: index returned %q", resp.Status)
+	}
+	ms, err := rs.LoadResponse(resp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ms.([]interface{})) == 0 {
+		return nil
+	}
+	return ms.([]interface{})[0].(map[string]interface{})
+}
+
+func getUser(t *testing.T, rs *rsapi.API) map[string]interface{} {
+	req, err := rs.BuildHTTPRequest("INDEX", "/api/sessions", "1.5", rsapi.APIParams{"view": "whoami"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := rs.PerformRequest(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("failed to retrieve user: index returned %q", resp.Status)
 	}
 	ms, err := rs.LoadResponse(resp)
 	if err != nil {

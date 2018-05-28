@@ -297,6 +297,7 @@ func (rsc *client) List(l *Locator, link string, filters Fields) ([]*Resource, e
 //
 // Get returns nil if there is no resource for the given locator.
 func (rsc *client) Get(l *Locator) (*Resource, error) {
+	fmt.Printf("\n\n\n ****************** %s %s %s %v \n\n\n\n", l.Href, l.Namespace, l.Type, l.ActionParams)
 	if l.Namespace == "" {
 		return nil, fmt.Errorf("resource locator is invalid: namespace is missing")
 	}
@@ -418,6 +419,8 @@ func (rsc *client) Create(namespace, typ string, fields Fields) (*Resource, erro
 // CreateServer creates the given resource. The "Href" field of the resource locator
 // should not be set on input, it is set in the result.
 func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource, error) {
+	res, _ := json.Marshal(fields)
+	fmt.Printf("\n\n ===== CRUNIS namespace: %s typ: %s fields: %s \n\n\n", namespace, typ, string(res))
 	m := map[string]interface{}{
 		"namespace": namespace,
 		"type":      typ,
