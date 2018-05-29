@@ -43,6 +43,7 @@ func resourceServer() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				ForceNew:    true,
 			},
 			"description": &schema.Schema{
 				Description: "description of server",
