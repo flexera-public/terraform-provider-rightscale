@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rightscale/rsc/httpclient"
 	"github.com/rightscale/rsc/rsapi"
 )
 
@@ -765,6 +766,8 @@ func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}
 
 // requestCWF makes a request to the RightScale Cloud Workflow API.
 func (rsc *client) requestCWF(method, url string, params, payload rsapi.APIParams) (interface{}, error) {
+	fmt.Printf("============== dumpformat: %v \n", httpclient.DumpFormat)
+
 	req, err := rsc.rs.BuildHTTPRequest(strings.ToUpper(method), url, "1.0", params, payload)
 	if err != nil {
 		return nil, err

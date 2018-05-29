@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/rightscale/rsc/httpclient"
+	"github.com/rightscale/rsc/log"
 	"github.com/rightscale/rsc/rsapi"
 )
 
@@ -518,9 +519,13 @@ func TestCreate(t *testing.T) {
 }
 
 func TestCreateServer(t *testing.T) {
+	httpclient.DumpFormat = httpclient.Verbose
+	// log.Interactive()
 	var ms mockServer
 	client := ms.launch(t, "createServer")
 	defer ms.close(t)
+
+	log.Info("Helllooooooo")
 
 	fields := `
 	{
