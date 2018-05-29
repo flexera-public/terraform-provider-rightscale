@@ -62,7 +62,7 @@ type (
 		GetProcess(href string) (*Process, error)
 		// DeleteProcess deletes the process with the given href.
 		DeleteProcess(href string) error
-		GetUser() string
+		GetUser() (map[string]interface{}, error)
 	}
 
 	// Resource represents a resource managed by the RightScale platform.
@@ -578,6 +578,7 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 		processID   string
 	)
 	{
+		u, _ := rsc.GetUser()
 		payload := rsapi.APIParams{
 			"source":      source,
 			"main":        "main",
@@ -586,8 +587,8 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 			"application": "cwfconsole",
 			"created_by": map[string]interface{}{
 				"id":    0,
-				"name":  rsc.GetUser(),
-				"email": "support@rightscale.com",
+				"name":  userString(u),
+				"email": u["email"],
 			},
 			"refresh_token": rsc.APIToken,
 		}

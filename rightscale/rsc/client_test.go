@@ -28,25 +28,43 @@ import (
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
 func TestUser(t *testing.T) {
-	service := launchMockServer(t, "runProcess")
-	rb := rshosts
-	hin := httpclient.Insecure
-	defer func() {
-		rshosts = rb
-		httpclient.Insecure = hin
-		service.Close()
-	}()
-	httpclient.Insecure = true
-	rshosts = []string{service.URL}
+	var (
+		mock bool
+		err  error
+		c    Client
+	)
+	mock = true
 
-	cl, err := New(validToken(t), 62656)
+	if mock {
+		service := launchMockServer(t, "runProcess")
+		rb := rshosts
+		hin := httpclient.Insecure
+		defer func() {
+			rshosts = rb
+			httpclient.Insecure = hin
+			service.Close()
+		}()
+		httpclient.Insecure = true
+		rshosts = []string{service.URL}
+
+		c, err = New("mytoken", 62656)
+	} else {
+		c, err = New(validToken(t), validProjectID(t))
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cl = cl.(*client)
+	u, err := c.GetUser()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	t.Logf(" User: %v", cl.GetUser())
+	const eu = "John Terraformer (RightScale, user@example.com)"
+	tu := userString(u)
+	if tu != eu {
+		t.Errorf("got user %s, expected %s", tu, eu)
+	}
 }
 
 func launchMockServer(t *testing.T, testCase string) *httptest.Server {
@@ -73,7 +91,8 @@ func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 				}`
 				response = fmt.Sprintf(response, acctest.RandString(370)) // access_token
 			case "/api/sessions", "/api/sessions/accounts":
-				response = `
+				if len(request.URL.Query()) == 0 {
+					response = `
 				[{
 					"created_at": "2008/08/01 17:09:31 +0000",
 					"links": [
@@ -112,7 +131,25 @@ func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 					"name": "Another account",
 					"updated_at": "2018/04/25 06:11:43 +0000"
 				}]`
-				response = fmt.Sprintf(response, projectID, projectID+3)
+					response = fmt.Sprintf(response, projectID, projectID+3)
+				} else {
+					response = `
+					{
+						"actions": [],
+						"message": "You have successfully logged into the RightScale API.",
+						"links": [
+							{
+								"rel": "account",
+								"href": "/api/accounts/%s"
+							},
+							{
+								"rel": "user",
+								"href": "/api/users/11111"
+							}
+						]
+					}`
+					response = fmt.Sprintf(response, projectID)
+				}
 			case fmt.Sprintf("/cwf/v1/accounts/%d/processes", projectID):
 				switch testCase {
 				case "runProcess":
@@ -293,6 +330,26 @@ func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 				} else {
 					response = response_completed
 				}
+			case "/api/users/11111":
+				response = `
+				{
+					"email": "user@example.com",
+					"first_name": "John",
+					"last_name": "Terraformer",
+					"login_name": "octocat",
+					"company": "RightScale",
+					"phone": "00000000",
+					"timezone_name": "UTC",
+					"created_at": "2014/08/12 17:18:54 +0000",
+					"updated_at": "2018/05/29 09:20:32 +0000",
+					"links": [
+						{
+							"rel": "self",
+							"href": "/api/users/111111"
+						}
+					],
+					"actions": []
+				}`
 			default:
 				// TODO write a log line warning of unknown PATH
 				panic(fmt.Errorf("Received unknown PATH: %s", request.URL.Path))

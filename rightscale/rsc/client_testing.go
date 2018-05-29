@@ -89,9 +89,9 @@ func (c *TestClient) DeleteProcess(href string) error {
 }
 
 // GetUser TODO
-func (c *TestClient) GetUser() string {
+func (c *TestClient) GetUser() (map[string]interface{}, error) {
 	if e := c.Expectation("GetUser"); e != nil {
-		return e.(func() string)()
+		return e.(func() map[string]interface{})(), nil
 	}
-	return ""
+	return nil, nil
 }
