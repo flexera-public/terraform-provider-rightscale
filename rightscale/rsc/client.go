@@ -829,7 +829,7 @@ func getCurrentUserID(rs *rsapi.API) string {
 	return ""
 }
 
-func getUserInfo(rs *rsapi.API, uid string) string {
+func getUserInfo(rs *rsapi.API, uid string) map[string]interface{} {
 	req, err := rs.BuildHTTPRequest("GET", fmt.Sprintf("/api/users/%s", uid), "1.5", nil, nil)
 	if err != nil {
 		panic(err)
@@ -847,18 +847,20 @@ func getUserInfo(rs *rsapi.API, uid string) string {
 	if err != nil {
 		panic(err)
 	}
-	i := ms.(map[string]interface{})
-	l := fmt.Sprintf("%s %s (%s, %s)", i["first_name"], i["last_name"], i["company"], i["email"])
-
-	return l
+	return ms.(map[string]interface{})
 }
 
-func (rsc *client) GetUser() string {
-	user := getCurrentUserID(rsc.rs)
-	if user == "" {
-		return ""
+func userString(u map[string]interface{}) string {
+	return fmt.Sprintf("%s %s (%s, %s)", u["first_name"], u["last_name"], u["company"], u["email"])
+}
+
+func (rsc *client) GetUser() (user map[string]interface{}, err error) {
+	ui := getCurrentUserID(rsc.rs)
+	if ui == "" {
+		err = fmt.Errorf("Couldn't retrieve information of user from credentials")
+		return nil, err
 	}
-	return getUserInfo(rsc.rs, user)
+	return getUserInfo(rsc.rs, ui), nil
 }
 
 // checkProject verifies that the given project ID is one of the projects listed in the
