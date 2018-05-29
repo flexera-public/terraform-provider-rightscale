@@ -444,16 +444,16 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 				$res = to_object(@res)
 				$final_state = @server.state
 				if $final_state == "operational"
-            $href = @server.href
-					  $res = to_object(@server)
-				    $fields = to_json($res["details"][0])
-				    @server = rs_cm.get(href: @server.href)
+					$href = @server.href
+					$res = to_object(@server)
+					$fields = to_json($res["details"][0])
+					@server = rs_cm.get(href: @server.href)
 				else
-	    			$server_name = @server.name
-            $href = @server.href
-	    			raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href
+					$server_name = @server.name
+					$href = @server.href
+					raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href
 				end
-			end	
+			end
 		end
 
 		define resource_add_tags($href, $tags) do
@@ -466,7 +466,7 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
   			call rs__cwf_simple_provision(@res) retrieve @server
 		end
 
-		# custom launch object that does not auto-delete on errors 
+		# custom launch object that does not auto-delete on errors
 		define tf_server_wait_for_provision(@server) return @server do
 	        $server_name = to_s(@server.name)
 	        sub on_error: tf_server_handle_launch_failure(@server) do
