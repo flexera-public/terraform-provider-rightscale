@@ -421,7 +421,6 @@ func (rsc *client) Create(namespace, typ string, fields Fields) (*Resource, erro
 // CreateServer creates the given resource. The "Href" field of the resource locator
 // should not be set on input, it is set in the result.
 func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource, error) {
-	res, _ := json.Marshal(fields)
 	m := map[string]interface{}{
 		"namespace": namespace,
 		"type":      typ,
