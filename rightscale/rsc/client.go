@@ -157,6 +157,8 @@ type (
 		ProjectID int
 
 		rs *rsapi.API
+
+		user map[string]interface{}
 	}
 )
 
@@ -856,12 +858,15 @@ func userString(u map[string]interface{}) string {
 }
 
 func (rsc *client) GetUser() (user map[string]interface{}, err error) {
-	ui := getCurrentUserID(rsc.rs)
-	if ui == "" {
-		err = fmt.Errorf("Couldn't retrieve information of user from credentials")
-		return nil, err
+	if rsc.user == nil {
+		ui := getCurrentUserID(rsc.rs)
+		if ui == "" {
+			err = fmt.Errorf("Couldn't retrieve information of user from credentials")
+			return nil, err
+		}
+		rsc.user = getUserInfo(rsc.rs, ui)
 	}
-	return getUserInfo(rsc.rs, ui), nil
+	return rsc.user, nil
 }
 
 // checkProject verifies that the given project ID is one of the projects listed in the
