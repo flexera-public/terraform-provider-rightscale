@@ -27,49 +27,25 @@ import (
 //     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
-func TestUser(t *testing.T) {
-	var (
-		mock bool
-		err  error
-		c    Client
-	)
-	mock = true
+const mockServerEnabled = true
 
-	if mock {
-		service := launchMockServer(t, "runProcess")
-		rb := rshosts
-		hin := httpclient.Insecure
-		defer func() {
-			rshosts = rb
-			httpclient.Insecure = hin
-			service.Close()
-		}()
-		httpclient.Insecure = true
-		rshosts = []string{service.URL}
-
-		c, err = New("mytoken", 62656)
-	} else {
-		c, err = New(validToken(t), validProjectID(t))
-	}
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	u, err := c.GetUser()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	const eu = "John Terraformer (RightScale, user@example.com)"
-	tu := userString(u)
-	if tu != eu {
-		t.Errorf("got user %s, expected %s", tu, eu)
-	}
+type mockServer struct {
+	or      []string // rshosts previous value
+	ohi     bool     // httpclient.Insecure previous value
+	service *httptest.Server
 }
 
-func launchMockServer(t *testing.T, testCase string) *httptest.Server {
+func (ms *mockServer) launch(t *testing.T, testCase string) Client {
+	if mockServerEnabled != true {
+		c, err := New(validToken(t), validProjectID(t))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return c
+	}
+
 	retries := 3
-	return httptest.NewServer(http.HandlerFunc(
+	ms.service = httptest.NewServer(http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			var (
 				response  = ""
@@ -361,34 +337,33 @@ func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 				writer.Write([]byte(response))
 			}
 		}))
+
+	ms.or = rshosts
+	ms.ohi = httpclient.Insecure
+	httpclient.Insecure = true
+	rshosts = []string{ms.service.URL}
+
+	c, err := New("mytoken", 62656)
+	if err != nil {
+		ms.close(t)
+		t.Fatal(err)
+	}
+	return c
+}
+
+func (ms *mockServer) close(t *testing.T) {
+	fmt.Println("CLOSING SERVER!!!")
+	if mockServerEnabled == true {
+		rshosts = ms.or
+		httpclient.Insecure = ms.ohi
+		ms.service.Close()
+	}
 }
 
 func TestRunProcess(t *testing.T) {
-	var (
-		mock bool
-		err  error
-		c    Client
-	)
-	mock = true
-	if mock {
-		service := launchMockServer(t, "runProcess")
-		rb := rshosts
-		hin := httpclient.Insecure
-		defer func() {
-			rshosts = rb
-			httpclient.Insecure = hin
-			service.Close()
-		}()
-		httpclient.Insecure = true
-		rshosts = []string{service.URL}
-
-		c, err = New("mytoken", 62656)
-	} else {
-		c, err = New(validToken(t), validProjectID(t))
-	}
-	if err != nil {
-		t.Errorf("got error %q, expected none", err)
-	}
+	var ms mockServer
+	c := ms.launch(t, "runProcess")
+	defer ms.close(t)
 
 	source := `define main() return $res do
 	$res = 11 + 31
@@ -543,22 +518,9 @@ func TestCreate(t *testing.T) {
 }
 
 func TestCreateServer(t *testing.T) {
-	service := launchMockServer(t, "createServer")
-
-	rb := rshosts
-	hin := httpclient.Insecure
-	defer func() {
-		rshosts = rb
-		httpclient.Insecure = hin
-		service.Close()
-	}()
-	httpclient.Insecure = true
-	rshosts = []string{service.URL}
-
-	client, err := New("usingMockServer", 42)
-	if err != nil {
-		t.Errorf("got error %q, expected none", err)
-	}
+	var ms mockServer
+	client := ms.launch(t, "createServer")
+	defer ms.close(t)
 
 	fields := `
 	{
@@ -589,7 +551,7 @@ func TestCreateServer(t *testing.T) {
 	}`
 
 	var fs Fields
-	err = json.Unmarshal([]byte(fields), &fs)
+	err := json.Unmarshal([]byte(fields), &fs)
 	if err != nil {
 		t.Errorf("got error %q, expected none", err)
 		return
@@ -789,5 +751,22 @@ end
 				t.Errorf("source `%s` got incorrect expectsOutputs value: `%t` (should be `%t`)", tt.name, expectsOutputs, tt.expectsOutputs)
 			}
 		})
+	}
+}
+
+func TestUser(t *testing.T) {
+	var ms mockServer
+	c := ms.launch(t, "TestUser")
+	defer ms.close(t)
+
+	u, err := c.GetUser()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const eu = "John Terraformer (RightScale, user@example.com)"
+	tu := userString(u)
+	if tu != eu {
+		t.Errorf("got user %s, expected %s", tu, eu)
 	}
 }
