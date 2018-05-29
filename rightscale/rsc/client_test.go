@@ -364,19 +364,28 @@ func launchMockServer(t *testing.T, testCase string) *httptest.Server {
 }
 
 func TestRunProcess(t *testing.T) {
-	service := launchMockServer(t, "runProcess")
+	var (
+		mock bool
+		err  error
+		c    Client
+	)
+	mock = true
+	if mock {
+		service := launchMockServer(t, "runProcess")
+		rb := rshosts
+		hin := httpclient.Insecure
+		defer func() {
+			rshosts = rb
+			httpclient.Insecure = hin
+			service.Close()
+		}()
+		httpclient.Insecure = true
+		rshosts = []string{service.URL}
 
-	rb := rshosts
-	hin := httpclient.Insecure
-	defer func() {
-		rshosts = rb
-		httpclient.Insecure = hin
-		service.Close()
-	}()
-	httpclient.Insecure = true
-	rshosts = []string{service.URL}
-
-	client, err := New("usingMockServer", 24)
+		c, err = New("mytoken", 62656)
+	} else {
+		c, err = New(validToken(t), validProjectID(t))
+	}
 	if err != nil {
 		t.Errorf("got error %q, expected none", err)
 	}
@@ -385,7 +394,7 @@ func TestRunProcess(t *testing.T) {
 	$res = 11 + 31
 end
 `
-	process, err := client.RunProcess(source, nil)
+	process, err := c.RunProcess(source, nil)
 	if err != nil {
 		t.Errorf("got error %q, expected none", err)
 		return
