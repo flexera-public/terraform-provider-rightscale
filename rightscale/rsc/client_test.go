@@ -39,7 +39,7 @@ func TestUser(t *testing.T) {
 	httpclient.Insecure = true
 	rshosts = []string{service.URL}
 
-	cl, err := New(validToken(t), 60073)
+	cl, err := New(validToken(t), 62656)
 	if err != nil {
 		t.Fatal(err)
 	}
