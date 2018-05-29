@@ -429,67 +429,66 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 	}
 
 	serverSourceRcl := fmt.Sprintf(`define main() return $href, $fields do
-			$href = ""
-			@server = rs_cm.servers.empty()
-			sub timeout: 1h do
-				$res = %s
-				@res = $res
-				call server_create_tf(@res) retrieve @server
-				if $res["fields"]["server"]["tags"]
-					$tags = $res["fields"]["server"]["tags"]
-					$href = [@server.href]
-				 	call resource_add_tags($href, $tags)
-				end
-				call tf_server_wait_for_provision(@server) retrieve @server
-				$res = to_object(@res)
-				$final_state = @server.state
-				if $final_state == "operational"
-					$href = @server.href
-					$res = to_object(@server)
-					$fields = to_json($res["details"][0])
-					@server = rs_cm.get(href: @server.href)
-				else
-					$server_name = @server.name
-					$href = @server.href
-					raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href
-				end
+		$href = ""
+		@server = rs_cm.servers.empty()
+		sub timeout: 1h do
+			$res = %s
+			@res = $res
+			call server_create_tf(@res) retrieve @server
+			if $res["fields"]["server"]["tags"]
+				$tags = $res["fields"]["server"]["tags"]
+				$href = [@server.href]
+				call resource_add_tags($href, $tags)
+			end
+			call tf_server_wait_for_provision(@server) retrieve @server
+			$res = to_object(@res)
+			$final_state = @server.state
+			if $final_state == "operational"
+				$href = @server.href
+				$res = to_object(@server)
+				$fields = to_json($res["details"][0])
+				@server = rs_cm.get(href: @server.href)
+			else
+				$server_name = @server.name
+				$href = @server.href
+				raise "Failed to provision server. Expected state 'operational' but got '" + $final_state + "' for server: " + $server_name + " at href: " + $href
 			end
 		end
+	end
 
-		define resource_add_tags($href, $tags) do
-			rs_cm.tags.multi_add(resource_hrefs: $href, tags: $tags)
+	define resource_add_tags($href, $tags) do
+		rs_cm.tags.multi_add(resource_hrefs: $href, tags: $tags)
+	end
+
+	# create the server object
+	define server_create_tf(@res) return @server do
+		# use RS canned provision to create
+		call rs__cwf_simple_provision(@res) retrieve @server
+	end
+
+	# custom launch object that does not auto-delete on errors
+	define tf_server_wait_for_provision(@server) return @server do
+		$server_name = to_s(@server.name)
+		sub on_error: tf_server_handle_launch_failure(@server) do
+			@server.launch()
 		end
-
-		# create the server object
-		define server_create_tf(@res) return @server do
-			# use RS canned provision to create
-  			call rs__cwf_simple_provision(@res) retrieve @server
+		$final_state = "launching"
+		# use RS canned logic to capture launching server state
+		sub on_error: rs__cwf_skip_any_error() do
+			sleep_until @server.state =~ "^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$"
+			$final_state = @server.state
 		end
+	end
 
-		# custom launch object that does not auto-delete on errors
-		define tf_server_wait_for_provision(@server) return @server do
-	        $server_name = to_s(@server.name)
-	        sub on_error: tf_server_handle_launch_failure(@server) do
-	            @server.launch()
-	        end
-	        $final_state = "launching"
-	        # use RS canned logic to capture launching server state
-	        sub on_error: rs__cwf_skip_any_error() do
-	            sleep_until @server.state =~ "^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$"
-	            $final_state = @server.state
-	        end
-
-			end
-
-	    # spit out error from launch call
-	    define tf_server_handle_launch_failure(@server) do
-	        $server_name = @server.name
-	        if $_errors && $_errors[0] && $_errors[0]["response"]
-	            raise "Error trying to launch server (" + $server_name + "): " + $_errors[0]["response"]["body"]
-	        else
-	            raise "Error trying to launch server (" + $server_name + ")"
-	        end
-	    end`, js)
+	# spit out error from launch call
+	define tf_server_handle_launch_failure(@server) do
+		$server_name = @server.name
+		if $_errors && $_errors[0] && $_errors[0]["response"]
+			raise "Error trying to launch server (" + $server_name + "): " + $_errors[0]["response"]["body"]
+		else
+			raise "Error trying to launch server (" + $server_name + ")"
+		end
+	end`, js)
 
 	p, err := rsc.RunProcess(serverSourceRcl, nil)
 	if err != nil {
