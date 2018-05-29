@@ -29,9 +29,6 @@ import (
 
 func TestUser(t *testing.T) {
 	service := launchMockServer(t, "runProcess")
-
-	// time.Sleep(300 * time.Second)
-
 	rb := rshosts
 	hin := httpclient.Insecure
 	defer func() {
@@ -42,14 +39,14 @@ func TestUser(t *testing.T) {
 	httpclient.Insecure = true
 	rshosts = []string{service.URL}
 
-	cl, err := New(validToken(t), validProjectID(t))
+	cl, err := New(validToken(t), 60073)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rs := cl.(*client).rs
+	cl = cl.(*client)
 
-	t.Logf(" User: %v", getUser(t, rs))
+	t.Logf(" User: %v", cl.GetUser())
 }
 
 func launchMockServer(t *testing.T, testCase string) *httptest.Server {
@@ -605,28 +602,6 @@ func showDeployment(t *testing.T, depl string, rs *rsapi.API) map[string]interfa
 	}
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("failed to retrieve deployment: index returned %q", resp.Status)
-	}
-	ms, err := rs.LoadResponse(resp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(ms.([]interface{})) == 0 {
-		return nil
-	}
-	return ms.([]interface{})[0].(map[string]interface{})
-}
-
-func getUser(t *testing.T, rs *rsapi.API) map[string]interface{} {
-	req, err := rs.BuildHTTPRequest("INDEX", "/api/sessions", "1.5", rsapi.APIParams{"view": "whoami"}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp, err := rs.PerformRequest(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("failed to retrieve user: index returned %q", resp.Status)
 	}
 	ms, err := rs.LoadResponse(resp)
 	if err != nil {

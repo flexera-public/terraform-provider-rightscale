@@ -87,3 +87,11 @@ func (c *TestClient) DeleteProcess(href string) error {
 	}
 	return nil
 }
+
+// GetUser TODO
+func (c *TestClient) GetUser() string {
+	if e := c.Expectation("GetUser"); e != nil {
+		return e.(func() string)()
+	}
+	return ""
+}

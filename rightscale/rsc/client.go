@@ -62,6 +62,7 @@ type (
 		GetProcess(href string) (*Process, error)
 		// DeleteProcess deletes the process with the given href.
 		DeleteProcess(href string) error
+		GetUser() string
 	}
 
 	// Resource represents a resource managed by the RightScale platform.
@@ -585,7 +586,7 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 			"application": "cwfconsole",
 			"created_by": map[string]interface{}{
 				"id":    0,
-				"name":  "Terraform",
+				"name":  rsc.GetUser(),
 				"email": "support@rightscale.com",
 			},
 			"refresh_token": rsc.APIToken,
@@ -788,6 +789,76 @@ func (rsc *client) requestCWF(method, url string, params, payload rsapi.APIParam
 	}
 
 	return resp, nil
+}
+
+func getCurrentUserID(rs *rsapi.API) string {
+	req, err := rs.BuildHTTPRequest("GET", "/api/sessions", "1.5", rsapi.APIParams{"view": "whoami"}, nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("req: %v", req)
+
+	resp, err := rs.PerformRequest(req)
+	if err != nil {
+		panic(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
+	}
+	ms, err := rs.LoadResponse(resp)
+	if err != nil {
+		panic(err)
+	}
+	links := ms.(map[string]interface{})["links"]
+	for _, el := range links.([]interface{}) {
+		var kind, value string
+		for k, v := range el.(map[string]interface{}) {
+			fmt.Printf("k: %v v: %v \n", k, v)
+			if k == "rel" {
+				kind = v.(string)
+			}
+			if k == "href" {
+				value = v.(string)
+			}
+		}
+		if kind == "user" {
+			parts := strings.Split(value, "/")
+			return parts[len(parts)-1]
+		}
+	}
+	return ""
+}
+
+func getUserInfo(rs *rsapi.API, uid string) string {
+	req, err := rs.BuildHTTPRequest("GET", fmt.Sprintf("/api/users/%s", uid), "1.5", nil, nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("req: %v", req)
+
+	resp, err := rs.PerformRequest(req)
+	if err != nil {
+		panic(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
+	}
+	ms, err := rs.LoadResponse(resp)
+	if err != nil {
+		panic(err)
+	}
+	i := ms.(map[string]interface{})
+	l := fmt.Sprintf("%s %s (%s, %s)", i["first_name"], i["last_name"], i["company"], i["email"])
+
+	return l
+}
+
+func (rsc *client) GetUser() string {
+	user := getCurrentUserID(rsc.rs)
+	if user == "" {
+		return ""
+	}
+	return getUserInfo(rsc.rs, user)
 }
 
 // checkProject verifies that the given project ID is one of the projects listed in the
