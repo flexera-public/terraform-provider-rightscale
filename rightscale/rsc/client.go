@@ -177,6 +177,7 @@ const (
 // New attempts to auth against all the RightScale hosts and initializes the
 //  RightScale client on success.
 func New(token string, projectID int) (Client, error) {
+	httpclient.DumpFormat = httpclient.Verbose
 	auth := rsapi.NewOAuthAuthenticator(token, projectID)
 	for _, host := range rshosts {
 		rs := rsapi.New(host, auth)
@@ -196,6 +197,7 @@ func New(token string, projectID int) (Client, error) {
 			if err := checkProject(as.([]interface{}), projectID); err != nil {
 				return nil, err
 			}
+			httpclient.DumpFormat = httpclient.Verbose
 			return &client{
 				APIToken:  token,
 				ProjectID: projectID,
