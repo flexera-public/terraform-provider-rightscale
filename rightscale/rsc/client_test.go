@@ -28,8 +28,6 @@ import (
 //     * RIGHTSCALE_PROJECT_ID is the RightScale project used to run the tests.
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
-const mockServerEnabled = true
-
 type mockServer struct {
 	or      []string // rshosts previous value
 	ohi     bool     // httpclient.Insecure previous value
@@ -37,7 +35,8 @@ type mockServer struct {
 }
 
 func (ms *mockServer) launch(t *testing.T, testCase string) Client {
-	if mockServerEnabled != true {
+	if os.Getenv("RSC_NOMOCK") != "" {
+		ms.service = nil
 		c, err := New(validToken(t), validProjectID(t))
 		if err != nil {
 			t.Fatal(err)
@@ -353,11 +352,11 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 }
 
 func (ms *mockServer) close(t *testing.T) {
-	fmt.Println("CLOSING SERVER!!!")
-	if mockServerEnabled == true {
+	if ms.service != nil {
 		rshosts = ms.or
 		httpclient.Insecure = ms.ohi
 		ms.service.Close()
+		ms.service = nil
 	}
 }
 
@@ -769,9 +768,18 @@ func TestUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	const eu = "John Terraformer (RightScale, user@example.com)"
 	tu := userString(u)
-	if tu != eu {
-		t.Errorf("got user %s, expected %s", tu, eu)
+	if os.Getenv("RSC_NOMOCK") == "" {
+		if tu != "John Terraformer via Terraform" {
+			t.Errorf("got wrong user (%s)", tu)
+		}
+	} else {
+		if !strings.HasSuffix(tu, " via Terraform") {
+			t.Errorf("user string doesn't end with 'via Terraform' (%s)", tu)
+		}
+		if len(strings.TrimSpace(strings.TrimSuffix(tu, "via Terraform"))) == 0 {
+			t.Errorf("user name contains only spaces")
+		}
 	}
+
 }

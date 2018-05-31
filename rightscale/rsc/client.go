@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -11,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	log15 "github.com/inconshreveable/log15"
 	"github.com/rightscale/rsc/httpclient"
+	rsclog "github.com/rightscale/rsc/log"
 	"github.com/rightscale/rsc/rsapi"
 )
 
@@ -177,7 +180,15 @@ const (
 // New attempts to auth against all the RightScale hosts and initializes the
 //  RightScale client on success.
 func New(token string, projectID int) (Client, error) {
-	httpclient.DumpFormat = httpclient.Verbose
+	if strings.ToUpper(os.Getenv("TF_LOG")) == "TRACE" {
+		// Shows network dumps
+		httpclient.DumpFormat = httpclient.Debug // Add '| httpclient.Verbose' to see auth headers
+		// Links rsc's log15 with TF's log
+		rsclog.Logger.SetHandler(log15.FuncHandler(func(r *log15.Record) error {
+			log.Printf("%s", string(log15.LogfmtFormat().Format(r)))
+			return nil
+		}))
+	}
 	auth := rsapi.NewOAuthAuthenticator(token, projectID)
 	for _, host := range rshosts {
 		rs := rsapi.New(host, auth)
@@ -197,7 +208,6 @@ func New(token string, projectID int) (Client, error) {
 			if err := checkProject(as.([]interface{}), projectID); err != nil {
 				return nil, err
 			}
-			httpclient.DumpFormat = httpclient.Verbose
 			return &client{
 				APIToken:  token,
 				ProjectID: projectID,
@@ -853,7 +863,7 @@ func getUserInfo(rs *rsapi.API, uid string) map[string]interface{} {
 }
 
 func userString(u map[string]interface{}) string {
-	return fmt.Sprintf("%s %s (%s, %s)", u["first_name"], u["last_name"], u["company"], u["email"])
+	return fmt.Sprintf("%s %s via Terraform", u["first_name"], u["last_name"])
 }
 
 func (rsc *client) GetUser() (user map[string]interface{}, err error) {
