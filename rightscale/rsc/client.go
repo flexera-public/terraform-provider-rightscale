@@ -748,6 +748,21 @@ func (rsc *client) DeleteProcess(href string) error {
 	return nil
 }
 
+// GetUser returns the user's information (name, surname, email, company)
+// The user is the one that generated the RefreshToken provided to authenticate
+// in RightScale
+func (rsc *client) GetUser() (user map[string]interface{}, err error) {
+	if rsc.user == nil {
+		ui := getCurrentUserID(rsc.rs)
+		if ui == "" {
+			err = fmt.Errorf("Couldn't retrieve information of user from credentials")
+			return nil, err
+		}
+		rsc.user = getUserInfo(rsc.rs, ui)
+	}
+	return rsc.user, nil
+}
+
 // API returns the low level RightScale API. This is not exposed by the public
 // interface and is mainly intended for use by tests.
 func (rsc *client) API() *rsapi.API {
@@ -778,8 +793,6 @@ func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}
 
 // requestCWF makes a request to the RightScale Cloud Workflow API.
 func (rsc *client) requestCWF(method, url string, params, payload rsapi.APIParams) (interface{}, error) {
-	fmt.Printf("============== dumpformat: %v \n", httpclient.DumpFormat)
-
 	req, err := rsc.rs.BuildHTTPRequest(strings.ToUpper(method), url, "1.0", params, payload)
 	if err != nil {
 		return nil, err
@@ -804,78 +817,6 @@ func (rsc *client) requestCWF(method, url string, params, payload rsapi.APIParam
 	}
 
 	return resp, nil
-}
-
-func getCurrentUserID(rs *rsapi.API) string {
-	req, err := rs.BuildHTTPRequest("GET", "/api/sessions", "1.5", rsapi.APIParams{"view": "whoami"}, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := rs.PerformRequest(req)
-	if err != nil {
-		panic(err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
-	}
-	ms, err := rs.LoadResponse(resp)
-	if err != nil {
-		panic(err)
-	}
-	links := ms.(map[string]interface{})["links"]
-	for _, el := range links.([]interface{}) {
-		var kind, value string
-		for k, v := range el.(map[string]interface{}) {
-			if k == "rel" {
-				kind = v.(string)
-			}
-			if k == "href" {
-				value = v.(string)
-			}
-		}
-		if kind == "user" {
-			parts := strings.Split(value, "/")
-			return parts[len(parts)-1]
-		}
-	}
-	return ""
-}
-
-func getUserInfo(rs *rsapi.API, uid string) map[string]interface{} {
-	req, err := rs.BuildHTTPRequest("GET", fmt.Sprintf("/api/users/%s", uid), "1.5", nil, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := rs.PerformRequest(req)
-	if err != nil {
-		panic(err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
-	}
-	ms, err := rs.LoadResponse(resp)
-	if err != nil {
-		panic(err)
-	}
-	return ms.(map[string]interface{})
-}
-
-func userString(u map[string]interface{}) string {
-	return fmt.Sprintf("%s %s via Terraform", u["first_name"], u["last_name"])
-}
-
-func (rsc *client) GetUser() (user map[string]interface{}, err error) {
-	if rsc.user == nil {
-		ui := getCurrentUserID(rsc.rs)
-		if ui == "" {
-			err = fmt.Errorf("Couldn't retrieve information of user from credentials")
-			return nil, err
-		}
-		rsc.user = getUserInfo(rsc.rs, ui)
-	}
-	return rsc.user, nil
 }
 
 // checkProject verifies that the given project ID is one of the projects listed in the
@@ -996,4 +937,67 @@ func analyzeSource(source string) (expectsOutputs bool, err error) {
 
 	// if return capture group matched, expectOutputs = true
 	return m[1] != "", nil
+}
+
+// returns the user's ID via /api/sessions {view: whoami} call
+func getCurrentUserID(rs *rsapi.API) string {
+	req, err := rs.BuildHTTPRequest("GET", "/api/sessions", "1.5", rsapi.APIParams{"view": "whoami"}, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := rs.PerformRequest(req)
+	if err != nil {
+		panic(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
+	}
+	ms, err := rs.LoadResponse(resp)
+	if err != nil {
+		panic(err)
+	}
+	links := ms.(map[string]interface{})["links"]
+	for _, el := range links.([]interface{}) {
+		var kind, value string
+		for k, v := range el.(map[string]interface{}) {
+			if k == "rel" {
+				kind = v.(string)
+			}
+			if k == "href" {
+				value = v.(string)
+			}
+		}
+		if kind == "user" {
+			parts := strings.Split(value, "/")
+			return parts[len(parts)-1]
+		}
+	}
+	return ""
+}
+
+// retrieves user information providing the user ID via /api/users/<ID>
+func getUserInfo(rs *rsapi.API, uid string) map[string]interface{} {
+	req, err := rs.BuildHTTPRequest("GET", fmt.Sprintf("/api/users/%s", uid), "1.5", nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := rs.PerformRequest(req)
+	if err != nil {
+		panic(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
+	}
+	ms, err := rs.LoadResponse(resp)
+	if err != nil {
+		panic(err)
+	}
+	return ms.(map[string]interface{})
+}
+
+// generates a string from the user's map[string]interface{}
+func userString(u map[string]interface{}) string {
+	return fmt.Sprintf("%s %s via Terraform", u["first_name"], u["last_name"])
 }

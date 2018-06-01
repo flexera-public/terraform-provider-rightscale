@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/rightscale/rsc/httpclient"
-	"github.com/rightscale/rsc/log"
 	"github.com/rightscale/rsc/rsapi"
 )
 
@@ -44,13 +43,11 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 		return c
 	}
 
+	const projectID = 62656 // This is the projectID expected in the mock Server
 	retries := 3
 	ms.service = httptest.NewServer(http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
-			var (
-				response  = ""
-				projectID = 62656
-			)
+			var response string
 
 			t.Logf("%s %s", request.Method, request.URL.Path)
 			payloadBytes, _ := ioutil.ReadAll(request.Body)
@@ -132,6 +129,8 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d1b51c028800360030f9", projectID))
 				case "createServer":
 					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b082948a17cac6ee9ece729", projectID))
+				case "runRCLWithDefinitions":
+					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b11716f1c02882cf0fdaa84", projectID))
 				default:
 					panic(fmt.Errorf("Unknown testCase: %s", testCase))
 				}
@@ -306,6 +305,57 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 				} else {
 					response = response_completed
 				}
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b11716f1c02882cf0fdaa84", projectID):
+				response = `
+				{
+					"id": "5b11716f1c02882cf0fdaa84",
+					"href": "/accounts/62656/processes/5b11716f1c02882cf0fdaa84",
+					"name": "0ot51etbjt34l",
+					"tasks": [
+						{
+							"id": "5b11716f1c02882cf0fdaa83",
+							"href": "/accounts/62656/tasks/5b11716f1c02882cf0fdaa83",
+							"name": "/root",
+							"progress": {
+								"percent": 100,
+								"summary": ""
+							},
+							"status": "completed",
+							"created_at": "2018-06-01T16:16:47.848Z",
+							"updated_at": "2018-06-01T16:16:47.848Z",
+							"finished_at": "2018-06-01T16:16:53.012Z"
+						}
+					],
+					"outputs": [
+						{
+							"name": "$res",
+							"value": {
+								"kind": "number",
+								"value": 35
+							}
+						}
+					],
+					"references": [],
+					"variables": [],
+					"source": "define main() return $res do\n\tsub timeout: 1h do\n\t\t$res = 23 + 12\n\tend\nend",
+					"main": "define main() return $res do\n|   sub timeout: \"1h\" do\n|   |   $res = 23 + 12\n|   end\nend",
+					"parameters": [],
+					"application": "cwfconsole",
+					"created_by": {
+						"email": "user@rightscale.com",
+						"id": 0,
+						"name": "John Terraformer via Terraform"
+					},
+					"created_at": "2018-06-01T16:16:47.848Z",
+					"updated_at": "2018-06-01T16:16:50.925Z",
+					"finished_at": "2018-06-01T16:16:53.016Z",
+					"status": "completed",
+					"links": {
+						"tasks": {
+							"href": "/accounts/62656/processes/5b11716f1c02882cf0fdaa84/tasks"
+						}
+					}
+				}`
 			case "/api/users/11111":
 				response = `
 				{
@@ -518,13 +568,9 @@ func TestCreate(t *testing.T) {
 }
 
 func TestCreateServer(t *testing.T) {
-	httpclient.DumpFormat = httpclient.Verbose
-	// log.Interactive()
 	var ms mockServer
 	client := ms.launch(t, "createServer")
 	defer ms.close(t)
-
-	log.Info("Helllooooooo")
 
 	fields := `
 	{
@@ -600,6 +646,26 @@ func TestDelete(t *testing.T) {
 	if d != nil {
 		t.Errorf("deployment not deleted")
 		return
+	}
+}
+
+func TestRunRCLWithDefinitions(t *testing.T) {
+	var ms mockServer
+	cl := ms.launch(t, "runRCLWithDefinitions")
+	defer ms.close(t)
+
+	var rcl = `
+	$res = 23 + 12
+	`
+
+	res, err := cl.(*client).runRCLWithDefinitions(rcl, "", "$res")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ev := "35"
+	if res["$res"] != ev {
+		t.Errorf("got result %s, expected %s", res["$res"], ev)
 	}
 }
 
