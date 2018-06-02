@@ -66,6 +66,7 @@ type (
 		GetProcess(href string) (*Process, error)
 		// DeleteProcess deletes the process with the given href.
 		DeleteProcess(href string) error
+		// GetUser returns the user's information (name, surname, email, company, ...)
 		GetUser() (map[string]interface{}, error)
 	}
 
@@ -761,7 +762,7 @@ func (rsc *client) DeleteProcess(href string) error {
 	return nil
 }
 
-// GetUser returns the user's information (name, surname, email, company)
+// GetUser returns the user's information (name, surname, email, company, ...)
 // The user is the one that generated the RefreshToken provided to authenticate
 // in RightScale
 func (rsc *client) GetUser() (user map[string]interface{}, err error) {

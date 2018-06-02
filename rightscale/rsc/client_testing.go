@@ -88,7 +88,7 @@ func (c *TestClient) DeleteProcess(href string) error {
 	return nil
 }
 
-// GetUser returns the user's information (name, surname, email, company)
+// GetUser returns the user's information (name, surname, email, company, ...)
 // The user is the one that generated the RefreshToken provided to authenticate
 // in RightScale
 func (c *TestClient) GetUser() (map[string]interface{}, error) {
