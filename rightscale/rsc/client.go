@@ -521,15 +521,15 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 		}
 		e := fmt.Errorf(
 			`unexpected process status %q. Error: %s.
-Check your account audit entries from more details with:
-./rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
+Check your account audit entries for more details with:
+rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
 			p.Status,
 			p.Error,
 			rsc.ProjectID,
 			rsc.rs.Host,
 			ts.Format("2006/01/02 15:04:05 -0700"),
 			te.Format("2006/01/02 15:04:05 -0700"),
-			rsc.user["email"])
+		)
 		return &Resource{Locator: &loc, Fields: nil}, e
 	}
 	outputs := p.Outputs
@@ -705,8 +705,8 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 				if expectsOutputs && len(process.Outputs) == 0 {
 					expectsOutputsTimeout--
 					if expectsOutputsTimeout == 0 {
-						err = fmt.Errorf("no Outputs received from your CWF process, check your return clause")
-						return nil, err
+						// Don't generate error because sometimes when failing we don't have outputs
+						return process, nil
 					}
 					continue
 				}
@@ -794,12 +794,25 @@ func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}
 	rcl = strings.Trim(rcl, "\n\t")
 	rcl = strings.Replace(rcl, "\t", "\t\t", -1)
 	source += "do\n\tsub timeout: 1h do\n\t\t" + rcl + "\n\tend\nend"
+	ts := time.Now().Add(-time.Second * 15)
 	p, err := rsc.RunProcess(source, nil)
 	if err != nil {
 		return nil, err
 	}
 	if p.Status != "completed" {
-		return nil, fmt.Errorf("unexpected process status %q. Error: %s", p.Status, p.Error)
+		te := time.Now().Add(time.Second * 15)
+		e := fmt.Errorf(
+			`unexpected process status %q. Error: %s.
+Check your account audit entries for more details with:
+./rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
+			p.Status,
+			p.Error,
+			rsc.ProjectID,
+			rsc.rs.Host,
+			ts.Format("2006/01/02 15:04:05 -0700"),
+			te.Format("2006/01/02 15:04:05 -0700"),
+		)
+		return nil, e
 	}
 	return p.Outputs, nil
 }
