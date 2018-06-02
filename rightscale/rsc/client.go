@@ -506,18 +506,31 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 		end
 	end`, js)
 
+	ts := time.Now().Add(-time.Second * 15)
 	p, err := rsc.RunProcess(serverSourceRcl, nil)
 	if err != nil {
 		return nil, err
 	}
 	if p.Status != "completed" {
+		te := time.Now().Add(time.Second * 15)
 		outputs := p.Outputs
 		loc := Locator{
 			Namespace: namespace,
 			Type:      typ,
 			Href:      outputs["$href"].(string),
 		}
-		return &Resource{Locator: &loc, Fields: nil}, fmt.Errorf("unexpected process status %q. Error: %s", p.Status, p.Error)
+		e := fmt.Errorf(
+			`unexpected process status %q. Error: %s.
+Check your account audit entries from more details with:
+./rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
+			p.Status,
+			p.Error,
+			rsc.ProjectID,
+			rsc.rs.Host,
+			ts.Format("2006/01/02 15:04:05 -0700"),
+			te.Format("2006/01/02 15:04:05 -0700"),
+			rsc.user["email"])
+		return &Resource{Locator: &loc, Fields: nil}, e
 	}
 	outputs := p.Outputs
 	var ofields Fields
@@ -535,7 +548,7 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 }
 
 // runRCLWithDefinitions provides a convenient method for running the given RCL code
-// synchronously including with any definations. It returns the outputs with the given variable or reference
+// synchronously including with any definitions. It returns the outputs with the given variable or reference
 // names.  It executes from a simply constructed 'main' so this may not be sufficient depending on the resource.
 func (rsc *client) runRCLWithDefinitions(rcl string, defs string, outputs ...string) (map[string]interface{}, error) {
 	source := "define main() "
