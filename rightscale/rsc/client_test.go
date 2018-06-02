@@ -3,7 +3,6 @@ package rsc
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -28,31 +27,28 @@ import (
 //     * DEBUG causes additional output useful to troubleshoot issues.
 
 type mockServer struct {
-	or      []string // rshosts previous value
-	ohi     bool     // httpclient.Insecure previous value
-	service *httptest.Server
+	or        []string // rshosts previous value
+	ohi       bool     // httpclient.Insecure previous value
+	service   *httptest.Server
+	projectID int
 }
 
 func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 	if os.Getenv("RSC_NOMOCK") != "" {
 		ms.service = nil
-		c, err := New(validToken(t), validProjectID(t))
+		ms.projectID = validProjectID(t)
+		c, err := New(validToken(t), ms.projectID)
 		if err != nil {
 			t.Fatal(err)
 		}
 		return c
 	}
 
-	const projectID = 62656 // This is the projectID expected in the mock Server
+	ms.projectID = 62656
 	retries := 3
 	ms.service = httptest.NewServer(http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			var response string
-
-			t.Logf("%s %s", request.Method, request.URL.Path)
-			payloadBytes, _ := ioutil.ReadAll(request.Body)
-			t.Logf("Payload: %s", string(payloadBytes))
-			t.Logf("Query: %v", request.URL.Query())
 
 			switch request.URL.Path {
 			case "/api/oauth2":
@@ -104,7 +100,7 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 					"name": "Another account",
 					"updated_at": "2018/04/25 06:11:43 +0000"
 				}]`
-					response = fmt.Sprintf(response, projectID, projectID+3)
+					response = fmt.Sprintf(response, ms.projectID, ms.projectID+3)
 				} else {
 					response = `
 					{
@@ -121,20 +117,20 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 							}
 						]
 					}`
-					response = fmt.Sprintf(response, projectID)
+					response = fmt.Sprintf(response, ms.projectID)
 				}
-			case fmt.Sprintf("/cwf/v1/accounts/%d/processes", projectID):
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes", ms.projectID):
 				switch testCase {
-				case "runProcess":
-					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d1b51c028800360030f9", projectID))
-				case "createServer":
-					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b082948a17cac6ee9ece729", projectID))
+				case "runProcess", "getProcess":
+					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b06d1b51c028800360030f9", ms.projectID))
+				case "createServer", "createServerNoOutputs":
+					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b082948a17cac6ee9ece729", ms.projectID))
 				case "runRCLWithDefinitions":
-					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b11716f1c02882cf0fdaa84", projectID))
+					writer.Header().Set("Location", fmt.Sprintf("/accounts/%d/processes/5b11716f1c02882cf0fdaa84", ms.projectID))
 				default:
 					panic(fmt.Errorf("Unknown testCase: %s", testCase))
 				}
-			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b06d1b51c028800360030f9", projectID):
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b06d1b51c028800360030f9", ms.projectID):
 				response = `
 				{
 					"id": "5b06d1b51c028800360030f9",
@@ -192,7 +188,7 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 				} else {
 					response = fmt.Sprintf(response, outputs)
 				}
-			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b082948a17cac6ee9ece729", projectID):
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b082948a17cac6ee9ece729", ms.projectID):
 				response_running := `
 				{
 					"id": "5b082948a17cac6ee9ece729",
@@ -234,6 +230,54 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 					"created_at": "2018-05-25T15:18:32.054Z",
 					"updated_at": "2018-05-25T15:18:33.978Z",
 					"status": "running",
+					"links": {
+						"tasks": {
+							"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729/tasks"
+						}
+					}
+				}
+				`
+				response_completed_no_outputs := `
+				{
+					"id": "5b082948a17cac6ee9ece729",
+					"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729",
+					"name": "0nwzhxbpxdn2z",
+					"tasks": [
+						{
+							"id": "5b082948a17cac6ee9ece728",
+							"href": "/accounts/62656/tasks/5b082948a17cac6ee9ece728",
+							"name": "/root",
+							"progress": {
+								"percent": 60,
+								"summary": "Retrieving field 'state'",
+								"expression": {
+									"id": "5b0829971136b00001909e2c",
+									"href": "/accounts//expressions/5b0829971136b00001909e2c",
+									"source": "@server.state",
+									"variables": [],
+									"references": []
+								}
+							},
+							"status": "activity",
+							"created_at": "2018-05-25T15:18:32.054Z",
+							"updated_at": "2018-05-25T15:18:32.054Z"
+						}
+					],
+					"outputs": [],
+					"references": [],
+					"variables": [],
+					"source": "define main() return $href, $fields do\n\t$href = \"\"\n\t@server = rs_cm.servers.empty()\n\tsub timeout: 1h do\n\t\t@res = {\"fields\":{\"server\":{\"deployment_href\":\"/api/deployments/936965004\",\"instance\":{\"associate_public_ip_address\":true,\"cloud_href\":\"/api/clouds/1\",\"image_href\":\"/api/clouds/1/images/E0HCVNHNAV8KK\",\"instance_type_href\":\"/api/clouds/1/instance_types/9K1AU4K4RCBU4\",\"ip_forwarding_enabled\":false,\"name\":\"terraform-test-instance-7hcxelcntc-29ley7ipse\",\"server_template_href\":\"/api/server_templates/402254004\",\"subnet_hrefs\":[\"/api/clouds/1/subnets/52NUHI2B8LVH1\"]},\"name\":\"terraform-test-server-7hcxelcntc-8k8ae2u7ia\"}},\"namespace\":\"rs_cm\",\"type\":\"servers\"}\n\t\tcall server_provision_tf(@res) retrieve @server\n\t\t$href   = @server.href\n\t\t$res    = to_object(@res)\n\tend\n$final_state = @server.state\n\tif $final_state == \"operational\"\n\t\t$res = to_object(@server)\n    $fields = to_json($res[\"details\"][0])\n    @server = rs_cm.get(href: @server.href)\n  else\n    $server_name = @server.name\n    raise \"Failed to provision server. Expected state 'operational' but got '\" + $final_state + \"' for server: \" + $server_name + \" at href: \" + $href\nend\nend\n# custom provision that does not auto-cleanup on error\n\tdefine server_provision_tf(@res) return @server do\n\t\t# use RS canned provision to create\n\t\tcall rs__cwf_simple_provision(@res) retrieve @server\n\t\t$object = to_object(@res)\n\t\t# use custom launch to avoid cleanup on error\n\t\tcall tf_server_wait_for_provision(@server) retrieve @server\n\tend\n\n\tdefine tf_server_wait_for_provision(@server) return @server do\n\t\t$server_name = to_s(@server.name)\n\t\tsub on_error: tf_server_handle_launch_failure(@server) do\n\t\t\t@server.launch()\n\t\tend\n\t\t$final_state = \"launching\"\n\t\t# use RS canned logic to capture launching server state\n\t\tsub on_error: rs__cwf_skip_any_error() do\n\t\t\tsleep_until @server.state =~ \"^(operational|stranded|stranded in booting|stopped|terminated|inactive|error)$\"\n\t\t\t$final_state = @server.state\n\t\tend\n\tend\n\n\t# spit out error from launch call\n\tdefine tf_server_handle_launch_failure(@server) do\n\t\t$server_name = @server.name\n\t\tif $_errors \u0026\u0026 $_errors[0] \u0026\u0026 $_errors[0][\"response\"]\n\t\t\traise \"Error trying to launch server (\" + $server_name + \"): \" + $_errors[0][\"response\"][\"body\"]\n\t\telse\n\t\t\traise \"Error trying to launch server (\" + $server_name + \")\"\n\t\tend\n\tend\n",
+					"main": "define main() return $href, $fields do\n|   $href = \"\"\n|   @server = rs_cm.servers.empty()\n|   sub timeout: \"1h\" do\n|   |   @res = { \"fields\": { \"server\": { \"deployment_href\": \"/api/deployments/936965004\", \"instance\": { \"associate_public_ip_address\": true, \"cloud_href\": \"/api/clouds/1\", \"image_href\": \"/api/clouds/1/images/E0HCVNHNAV8KK\", \"instance_type_href\": \"/api/clouds/1/instance_types/9K1AU4K4RCBU4\", \"ip_forwarding_enabled\": false, \"name\": \"terraform-test-instance-7hcxelcntc-29ley7ipse\", \"server_template_href\": \"/api/server_templates/402254004\", \"subnet_hrefs\": [\"/api/clouds/1/subnets/52NUHI2B8LVH1\"] }, \"name\": \"terraform-test-server-7hcxelcntc-8k8ae2u7ia\" } }, \"namespace\": \"rs_cm\", \"type\": \"servers\" }\n|   |   call server_provision_tf(@res) retrieve @server\n|   |   $href = @server.href\n|   |   $res = to_object(@res)\n|   end\n|   $final_state = @server.state\n|   if $final_state == \"operational\"\n|   |   $res = to_object(@server)\n|   |   $fields = to_json($res[\"details\"][0])\n|   |   @server = rs_cm.get({ \"href\": @server.href })\n|   elsif true|   |   $server_name = @server.name\n|   |   raise \"Failed to provision server. Expected state 'operational' but got '\" + $final_state + \"' for server: \" + $server_name + \" at href: \" + $href\n|   end\nend",
+					"parameters": [],
+					"application": "cwfconsole",
+					"created_by": {
+						"email": "support@rightscale.com",
+						"id": 0,
+						"name": "Terraform"
+					},
+					"created_at": "2018-05-25T15:18:32.054Z",
+					"updated_at": "2018-05-25T15:18:33.978Z",
+					"status": "completed",
 					"links": {
 						"tasks": {
 							"href": "/accounts/62656/processes/5b082948a17cac6ee9ece729/tasks"
@@ -298,14 +342,21 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 						}
 					}
 				}`
-
-				retries = retries - 1
-				if retries > 0 {
-					response = response_running
-				} else {
-					response = response_completed
+				switch testCase {
+				case "createServer":
+					retries = retries - 1
+					switch retries {
+					case 0:
+						response = response_completed
+					case 1:
+						response = response_completed_no_outputs
+					default:
+						response = response_running
+					}
+				case "createServerNoOutputs":
+					response = response_completed_no_outputs
 				}
-			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b11716f1c02882cf0fdaa84", projectID):
+			case fmt.Sprintf("/cwf/v1/accounts/%d/processes/5b11716f1c02882cf0fdaa84", ms.projectID):
 				response = `
 				{
 					"id": "5b11716f1c02882cf0fdaa84",
@@ -378,7 +429,7 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 				}`
 			default:
 				// TODO write a log line warning of unknown PATH
-				panic(fmt.Errorf("Received unknown PATH: %s", request.URL.Path))
+				panic(fmt.Errorf("Mock Server received unknown PATH: %s", request.URL.Path))
 				return
 			}
 			if len(response) > 0 {
@@ -612,6 +663,16 @@ func TestCreateServer(t *testing.T) {
 		return
 	}
 
+	ms.close(t)
+	client = ms.launch(t, "createServerNoOutputs")
+	defer ms.close(t)
+	_, err = client.CreateServer("rs_cm", "servers", fs)
+	ee := "no Outputs received from your CWF process, check your return clause"
+	if err.Error() != ee {
+		t.Errorf("expected error (%s) not received", ee)
+		return
+	}
+
 }
 
 func TestDelete(t *testing.T) {
@@ -666,6 +727,26 @@ func TestRunRCLWithDefinitions(t *testing.T) {
 	ev := "35"
 	if res["$res"] != ev {
 		t.Errorf("got result %s, expected %s", res["$res"], ev)
+	}
+}
+
+func TestGetProcess(t *testing.T) {
+	if os.Getenv("RSC_NOMOCK") != "" {
+		// This only works if using MOCK SERVER
+		return
+	}
+	var ms mockServer
+	cl := ms.launch(t, "getProcess")
+	defer ms.close(t)
+
+	res, err := cl.GetProcess(fmt.Sprintf("/accounts/%d/processes/5b11716f1c02882cf0fdaa84", ms.projectID))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ev := "completed"
+	if res.Status != ev {
+		t.Errorf("got status %s, expected %s", res.Status, ev)
 	}
 }
 

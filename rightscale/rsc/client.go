@@ -617,8 +617,8 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 		process *Process
 	)
 
-	// print link to CWF console if DEBUG is set, mainly useful for tests
-	if os.Getenv("DEBUG") != "" {
+	// print link to CWF console if TF_LOG=TRACE is set, mainly useful for tests
+	if strings.ToUpper(os.Getenv("TF_LOG")) == "TRACE" {
 		host := strings.Replace(rsc.rs.Host, "us-", "selfservice-", 1)
 		fmt.Printf("RUNNING: https://%s/designer/processes/%s\n%s\n", host, processID, source)
 		then := time.Now()
