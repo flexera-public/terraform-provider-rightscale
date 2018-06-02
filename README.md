@@ -74,3 +74,12 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 ```sh
 $ make testacc
 ```
+
+To get full debug output (including network dumps) set `TF_LOG` to `TRACE` level:
+```sh
+$ TF_LOG=TRACE terraform apply
+```
+```sh
+$ TF_LOG=TRACE make test
+```
+
