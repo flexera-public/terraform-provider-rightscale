@@ -428,7 +428,6 @@ func (ms *mockServer) launch(t *testing.T, testCase string) Client {
 					"actions": []
 				}`
 			default:
-				// TODO write a log line warning of unknown PATH
 				panic(fmt.Errorf("Mock Server received unknown PATH: %s", request.URL.Path))
 				return
 			}
