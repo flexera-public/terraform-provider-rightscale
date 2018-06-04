@@ -522,6 +522,7 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 		}
 		e := fmt.Errorf(
 			`unexpected process status %q. Error: %s.
+
 Check your account audit entries for more details with:
 rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
 			p.Status,
@@ -804,6 +805,7 @@ func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}
 		te := time.Now().Add(time.Second * 15)
 		e := fmt.Errorf(
 			`unexpected process status %q. Error: %s.
+
 Check your account audit entries for more details with:
 rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
 			p.Status,
