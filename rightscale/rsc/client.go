@@ -512,14 +512,16 @@ func (rsc *client) CreateServer(namespace, typ string, fields Fields) (*Resource
 	if err != nil {
 		return nil, err
 	}
+
+	outputs := p.Outputs
+	loc := Locator{
+		Namespace: namespace,
+		Type:      typ,
+		Href:      outputs["$href"].(string),
+	}
+
 	if p.Status != "completed" {
 		te := time.Now().Add(time.Second * 15)
-		outputs := p.Outputs
-		loc := Locator{
-			Namespace: namespace,
-			Type:      typ,
-			Href:      outputs["$href"].(string),
-		}
 		e := fmt.Errorf(
 			`unexpected process status %q. Error: %s.
 
@@ -534,18 +536,13 @@ rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/au
 		)
 		return &Resource{Locator: &loc, Fields: nil}, e
 	}
-	outputs := p.Outputs
+
 	var ofields Fields
 	err = json.Unmarshal([]byte(outputs["$fields"].(string)), &ofields)
 	if err != nil {
 		return nil, err
 	}
 
-	loc := Locator{
-		Namespace: namespace,
-		Type:      typ,
-		Href:      outputs["$href"].(string),
-	}
 	return &Resource{Locator: &loc, Fields: ofields}, nil
 }
 
