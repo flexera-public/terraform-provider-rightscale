@@ -805,7 +805,7 @@ func (rsc *client) runRCL(rcl string, outputs ...string) (map[string]interface{}
 		e := fmt.Errorf(
 			`unexpected process status %q. Error: %s.
 Check your account audit entries for more details with:
-./rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
+rsc --refreshToken <refreshToken> --pp --account %d --host %s cm15 index /api/audit_entries  'start_date=%s' 'end_date=%s' 'limit=1000'`,
 			p.Status,
 			p.Error,
 			rsc.ProjectID,
