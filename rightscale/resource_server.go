@@ -1,6 +1,10 @@
 package rightscale
 
 import (
+	"log"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
 )
@@ -28,7 +32,7 @@ func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		Read:   resourceRead,
 		Exists: resourceExists,
-		Delete: resourceDelete,
+		Delete: resourceDeleteServer,
 		Create: resourceCreateServer(serverWriteFields),
 		Update: resourceUpdateFunc(serverWriteFields),
 
@@ -142,5 +146,41 @@ func resourceCreateServer(fieldsFunc func(*schema.ResourceData) rsc.Fields) func
 		// Sets 'id' which allows terraform to locate the objects created which includes namespace.
 		d.SetId(res.Locator.Namespace + ":" + res.Locator.Href)
 		return nil
+	}
+}
+
+func resourceDeleteServer(d *schema.ResourceData, m interface{}) error {
+	client := m.(rsc.Client)
+	loc, err := locator(d)
+	if err != nil {
+		return err
+	}
+
+	// wrap in rescue/retry if response is 422 with max ttl
+	timeout := time.After(5 * time.Minute)
+	tick := time.Tick(10 * time.Second)
+	log.Printf("[INFO] Deleting Server - will retry for 5 minutes in case connectivity to the server is lost during termination: %s", d.Id())
+	for {
+		select {
+		case <-timeout:
+			// 5 minutes expired - this is the last try
+			return client.Delete(loc)
+
+		case <-tick:
+			err := client.Delete(loc)
+			if err == nil {
+				// successful deletion - exit retry/timeout loop
+				return nil
+			}
+			// If the server's network is being destroyed while terminating the server, we get an error message
+			// containing 'ActionNotAllowed: The server has a current instance.'
+			// So if we see this error, we retry the Delete action during 5 minutes
+			if strings.Contains(err.Error(), "ActionNotAllowed: The server has a current instance.") {
+				log.Printf("[INFO] Deleting Server - received 422 from CM API - probably we lost connection to server - trying again")
+			} else {
+				// Unhandled error from API that should be immediately returned
+				return err
+			}
+		}
 	}
 }

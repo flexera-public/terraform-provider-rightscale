@@ -39,7 +39,7 @@ The following arguments are supported:
 
 * `description` - (Optional) A description of the server
 
-* `instance` - (Required) See [rightscale_instance](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_instance.markdown)
+* `instance` - (Required) See [rightscale_instance](https://github.com/rightscale/terraform-provider-rightscale/blob/master/website/docs/r/cm_instance.markdown)
 
 * `name` - (Required) The name of the server
 
@@ -62,3 +62,5 @@ The following attributes are exported:
 * `state` - The state of the server (operational, terminating, pending, stranded, etc.)
 
 * `href` - Href of the server.
+
+* `resource_uid` - Cloud resource_uid as reported by cm platform.

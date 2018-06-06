@@ -45,7 +45,7 @@ $ make build
 Using the provider
 ----------------------
 
-See the [RightScale Provider documentation](https://www.terraform.io/docs/providers/rightscale/index.html) to get started using the RightScale provider.
+See the [RightScale Provider documentation](https://github.com/rightscale/terraform-provider-rightscale/blob/master/website/docs/index.html.markdown) to get started using the RightScale provider.
 
 Developing the Provider
 ---------------------------

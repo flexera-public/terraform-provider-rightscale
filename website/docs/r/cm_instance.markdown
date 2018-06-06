@@ -13,7 +13,7 @@ Use this resource to create, update or destroy an instance.
 ## Example Usage : Basic configuration of an instance resource
 
 ```hcl
-resource "rightscale_instance" "crunis_instance" {
+resource "rightscale_instance" "an_instance" {
   cloud_href = "/api/clouds/6"
   image_href = "/api/clouds/6/images/3TRNL47PJB97N"
   instance_type_href = "/api/clouds/6/instance_types/8SCHNH0JBHE1R"
@@ -26,21 +26,21 @@ resource "rightscale_instance" "crunis_instance" {
 
 The following arguments are supported:
 
- * `name` - (Required) The name of the instance.
+* `name` - (Required) The name of the instance.
 
- * `cloud_href` - (Required) The cloud_href the instance belongs to.
+* `cloud_href` - (Required) The cloud_href the instance belongs to.
 
- * `image_href` - (Required) The href of the instance image.
+* `image_href` - (Required) The href of the instance image.
 
- * `instance_type_href` - (Required) The href of the instance type.
+* `instance_type_href` - (Required) The href of the instance type.
 
- * `server_template_href` - (Optional) The href of the instance server template resource.
+* `server_template_href` - (Optional) The href of the instance server template resource.
 
- * `inputs` - (Optional) Inputs associated with an instance when incarnated from a [server](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_server.markdown) or [server_array](https://github.com/rightscale/terraform-provider-rightscale/blob/master/rightscale/website/docs/r/cm_server_array.markdown).
+* `inputs` - (Optional) Inputs associated with an instance when incarnated from a [server](https://github.com/rightscale/terraform-provider-rightscale/blob/master/website/docs/r/cm_server.markdown) or [server_array](https://github.com/rightscale/terraform-provider-rightscale/blob/master/website/docs/r/cm_server_array.markdown).
 
- * `associate_public_ip_address` - (Optional) Indicates if the instance will get a Public IP address.
+* `associate_public_ip_address` - (Optional) Indicates if the instance will get a Public IP address.
 
- * `cloud_specific_attributes` - (Optional) Attributes specific to the cloud the instance belongs to.
+* `cloud_specific_attributes` - (Optional) Attributes specific to the cloud the instance belongs to.
 
 * `datacenter_href` - (Optional) The href of the datacenter that holds the instance (e.g. /api/clouds/6/datacenters/6IHONC8ANOUHI).
 
@@ -65,3 +65,23 @@ The following arguments are supported:
 * `user_data` - (Optional) User data that RightScale automatically passes to your instance at boot time.
 
 * `locked` - (Optional)  Whether instance is locked, a locked instance cannot be terminated or deleted.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `links` - Hrefs of related API resources
+
+* `created_at` - Datestamp of instance creation.
+
+* `updated_at` - Datestamp of when instance was updated last.
+
+* `state` - The state of the instance (operational, terminating, pending, stranded, etc.)
+
+* `href` - Href of the instance.
+
+* `resource_uid` - Cloud resource_uid as reported by cm platform.
+
+* `public_ip_addresses` - List of public IP addresses associated to the instance
+
+* `private_ip_addresses` - List of private IP addresses associated to the instance

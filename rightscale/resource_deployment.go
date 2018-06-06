@@ -145,7 +145,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, m interface{}) error {
 
 	// wrap in rescue/retry if response is 422 with max ttl
 	timeout := time.After(5 * time.Minute)
-	tick := time.Tick(10 + time.Second)
+	tick := time.Tick(10 * time.Second)
 	log.Printf("[INFO] Deleting Deployment - waiting up to 5 min for objects to finish being destroyed in deployment: %s", d.Id())
 	for {
 		select {
