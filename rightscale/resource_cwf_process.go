@@ -160,10 +160,27 @@ func parseParam(param map[string]interface{}) (*rsc.Parameter, error) {
 			return nil, fmt.Errorf("parameter 'value' is not valid json: %s", err)
 		}
 	}
+	if kind == "array" {
+		if err := entifyArrayParameter(&iv); err != nil {
+			return nil, fmt.Errorf("parameter definition is not valid: %s", err)
+		}
+	}
+
 	if err := validateParameter("parameter", kind, iv); err != nil {
 		return nil, fmt.Errorf("parameter definition is not valid: %s", err)
 	}
 	return &rsc.Parameter{Kind: rsc.ParameterKind(kind), Value: iv}, nil
+}
+
+func entifyArrayParameter(iv *interface{}) error {
+	es, ok := (*iv).([]interface{})
+	if !ok {
+		return fmt.Errorf("entity with kind 'array' is not a slice of entities: %v", iv)
+	}
+	for i, ei := range es {
+		es[i] = toEntity(ei)
+	}
+	return nil
 }
 
 func validateParameter(ctx string, k string, iv interface{}) error {
@@ -189,19 +206,7 @@ func validateParameter(ctx string, k string, iv interface{}) error {
 			return fmt.Errorf("%sentity with kind 'null' must have a nil value, got %v", pref, iv)
 		}
 	case "array":
-		es, ok := iv.([]interface{})
-		if !ok {
-			return fmt.Errorf("%sentity with kind 'array' is not a slice of entities: %v", pref, iv)
-		}
-		for i, ei := range es {
-			e, err := entityFromInterface(ei)
-			if err != nil {
-				return fmt.Errorf("%selement of array entity is not an entity: %s", pref, err)
-			}
-			if err := validateParameter(ctx+fmt.Sprintf("[%d]", i), string(e.Kind), e.Value); err != nil {
-				return err
-			}
-		}
+		// Necessary checks already run at entifyArrayParameters
 	case "object":
 		oi, ok := iv.(map[string]interface{})
 		if !ok {
@@ -342,6 +347,45 @@ func validateParameterKind(v string) error {
 		return nil
 	}
 	return fmt.Errorf("%q is not a valid entity kind", v)
+}
+
+// toEntity converts interface to entity (rsc.Parameter with Kind and Value)
+func toEntity(entity interface{}) *rsc.Parameter {
+	var value interface{}
+	kind := rsc.KindString
+	switch actual := entity.(type) {
+	case string:
+		value = actual
+	case bool:
+		kind = rsc.KindBool
+		value = actual
+	case float64:
+		kind = rsc.KindNumber
+		value = actual
+	case []interface{}:
+		kind = rsc.KindArray
+		values := make([]*rsc.Parameter, len(actual))
+		for i, v := range actual {
+			values[i] = toEntity(v)
+		}
+		value = values
+	case map[string]interface{}:
+		kind = rsc.KindObject
+		values := make(map[string]*rsc.Parameter, len(actual))
+		for k, v := range actual {
+			values[k] = toEntity(v)
+		}
+		value = values
+	case nil:
+		kind = rsc.KindNull
+		value = nil
+	default:
+		panic(fmt.Errorf("unknown type when converting to entity: %T", actual))
+	}
+	return &rsc.Parameter{
+		Kind:  kind,
+		Value: value,
+	}
 }
 
 const entityKindDesc = `Entities have a kind and a value.
