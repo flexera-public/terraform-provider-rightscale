@@ -178,7 +178,11 @@ func entifyArrayParameter(iv *interface{}) error {
 		return fmt.Errorf("entity with kind 'array' is not a slice of entities: %v", iv)
 	}
 	for i, ei := range es {
-		es[i] = toEntity(ei)
+		e, err := toEntity(ei)
+		if err != nil {
+			return err
+		}
+		es[i] = e
 	}
 	return nil
 }
@@ -350,7 +354,7 @@ func validateParameterKind(v string) error {
 }
 
 // toEntity converts interface to entity (rsc.Parameter with Kind and Value)
-func toEntity(entity interface{}) *rsc.Parameter {
+func toEntity(entity interface{}) (*rsc.Parameter, error) {
 	var value interface{}
 	kind := rsc.KindString
 	switch actual := entity.(type) {
@@ -366,26 +370,34 @@ func toEntity(entity interface{}) *rsc.Parameter {
 		kind = rsc.KindArray
 		values := make([]*rsc.Parameter, len(actual))
 		for i, v := range actual {
-			values[i] = toEntity(v)
+			e, err := toEntity(v)
+			if err != nil {
+				return nil, err
+			}
+			values[i] = e
 		}
 		value = values
 	case map[string]interface{}:
 		kind = rsc.KindObject
 		values := make(map[string]*rsc.Parameter, len(actual))
 		for k, v := range actual {
-			values[k] = toEntity(v)
+			e, err := toEntity(v)
+			if err != nil {
+				return nil, err
+			}
+			values[k] = e
 		}
 		value = values
 	case nil:
 		kind = rsc.KindNull
 		value = nil
 	default:
-		panic(fmt.Errorf("unknown type when converting to entity: %T", actual))
+		return nil, fmt.Errorf("unknown type when converting to entity: %T", actual)
 	}
 	return &rsc.Parameter{
 		Kind:  kind,
 		Value: value,
-	}
+	}, nil
 }
 
 const entityKindDesc = `Entities have a kind and a value.
