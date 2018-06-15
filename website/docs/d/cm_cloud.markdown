@@ -57,3 +57,5 @@ The following attributes are exported:
 * `cloud_type` - Cloud type as referenced in cm platform. 
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the cloud.

@@ -51,3 +51,5 @@ The following attributes are exported:
 * `created_at` - Datestamp of credential creation.
 
 * `updated_at` - Datestamp of when credential was updated last.
+
+* `href` - Href of the credential.
