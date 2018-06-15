@@ -953,10 +953,6 @@ var validDefinition = regexp.MustCompile("^[[:blank:]\n]*define[[:blank:]]*[\\w_
 
 func analyzeSource(source string) (expectsOutputs bool, err error) {
 	m := validDefinition.FindStringSubmatch(source)
-	if err != nil {
-		return false, fmt.Errorf("error parsing rightscale_cwf_process source definition: %s", err)
-	}
-
 	if len(m) != 2 {
 		return false, fmt.Errorf("invalid rightscale_cwf_process source definition")
 	}
