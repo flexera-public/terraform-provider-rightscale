@@ -1,5 +1,13 @@
 # Change Log
 
+## [v1.2.1](https://github.com/rightscale/terraform-provider-rightscale/tree/HEAD)
+
+[Full Changelog](https://github.com/rightscale/terraform-provider-rightscale/compare/v1.2.0...v1.2.1)
+
+**Merged pull requests:**
+
+- STEEL-296 Add href field to datasources [\#65](https://github.com/rightscale/terraform-provider-rightscale/pull/65) ([crunis](https://github.com/crunis))
+
 ## [v1.2.0](https://github.com/rightscale/terraform-provider-rightscale/tree/v1.2.0) (2018-06-13)
 [Full Changelog](https://github.com/rightscale/terraform-provider-rightscale/compare/v1.1.0...v1.2.0)
 
