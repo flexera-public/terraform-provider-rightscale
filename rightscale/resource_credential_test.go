@@ -5,8 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rightscale/rsc/cm15"
-
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -19,7 +17,6 @@ func TestAccRightScaleCredential_basic(t *testing.T) {
 		credentialName        = "terraform-test-credential-" + testString + "-" + acctest.RandString(10)
 		credentialValue       = "thisIsATest_thisIsOnlyATest"
 		credentialDescription = "A test cred created by the rs tf provider"
-		credential            cm15.Credential
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -30,32 +27,56 @@ func TestAccRightScaleCredential_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccCredential_basic(credentialName, credentialValue, credentialDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCredentialExists("rightscale_credential.credential_test", &credential),
+					testAccCheckCredential("rightscale_credential.credential_test", "data.rightscale_credential.credential_test"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCredentialExists(n string, credential *cm15.Credential) resource.TestCheckFunc {
+func testAccCheckCredential(r string, d string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[r]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", r)
 		}
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
 
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
 		loc := getCMClient().CredentialLocator(getHrefFromID(rs.Primary.ID))
 
-		found, err := loc.Show(nil)
+		_, err := loc.Show(nil)
 		if err != nil {
 			return err
 		}
 
-		*credential = *found
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"description",
+			"value",
+			"created_at",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
 
 		return nil
 	}
@@ -96,6 +117,13 @@ resource "rightscale_credential" "credential_test" {
 	name              = %q
 	value	          = %q
 	description		  = %q
+}
+
+data "rightscale_credential" "credential_test" {
+	filter {
+		name          = "${rightscale_credential.credential_test.name}"
+		description   = "${rightscale_credential.credential_test.description}"
+	}
 }
 `, name, value, description)
 }
