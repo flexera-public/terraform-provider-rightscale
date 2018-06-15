@@ -102,3 +102,5 @@ The following attributes are exported:
 * `virtualization_type` - Image virtualization type as referenced in cm platform. Eg "hvm" etc.
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the image.

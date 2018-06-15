@@ -56,3 +56,5 @@ The following attributes are exported:
 * `created_at` - Creation date of the volume type
 
 * `updated_at` - Last update of the volume type
+
+* `href` - Href of the volume type

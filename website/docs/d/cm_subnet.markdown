@@ -64,3 +64,5 @@ The following attributes are exported:
 * `visibility` - Visibility of the subnet.
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the subnet.

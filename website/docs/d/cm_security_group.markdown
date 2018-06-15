@@ -53,3 +53,5 @@ The following attributes are exported:
 * `description` - The description of the security group.
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the security group.

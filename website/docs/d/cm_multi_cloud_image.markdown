@@ -59,3 +59,5 @@ The following attributes are exported:
 * `revision` - The revision of multi-cloud image, use 0 to match latest non-committed version
 
 * `links` - Hrefs of related API resources
+
+* `href` - Href of the multi-cloud image

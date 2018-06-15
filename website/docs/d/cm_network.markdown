@@ -57,3 +57,5 @@ The following attributes are exported:
 * `description` - The description of the network.
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the network.

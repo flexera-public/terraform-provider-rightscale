@@ -60,3 +60,5 @@ The following attributes are exported:
 * `optimized` - A flag indicating whether instances of this server should be optimized for high-performance volumes
 
 * `links` - Hrefs of related API resources
+
+* `href` - Href of the server

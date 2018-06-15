@@ -72,3 +72,5 @@ The following attributes are exported:
 * `created_ at` - Time of creation of the volume snapshot
 
 * `updated_at` - Last update of the volume snapshot
+
+* `href` - Href of the volume snapshot

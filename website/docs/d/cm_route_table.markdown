@@ -50,3 +50,5 @@ The following attributes are exported:
 * `routes` - Associated routes.
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the route table.

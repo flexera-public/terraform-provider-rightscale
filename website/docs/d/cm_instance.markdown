@@ -103,3 +103,5 @@ The following attributes are exported:
 * `created_ at` - Time of creation of the instance
 
 * `updated_at` - Last update of the instance
+
+* `href` - Href of the instance

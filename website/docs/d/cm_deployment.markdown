@@ -55,3 +55,5 @@ The following attributes are exported:
 * `locked` - Displays if the deployment is locked or not.
 
 * `server_tag_scope` - Displays what the scope of tags are in the deployment. Options are "deployment" or "account."
+
+* `href` - Href of the deployment.

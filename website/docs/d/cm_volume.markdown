@@ -71,3 +71,5 @@ The following attributes are exported:
 * `status` - The volume Status (e.g. available, in-use, ...)
 
 * `updated_at` - Last update of the volume
+
+* `href` - Href of the volume

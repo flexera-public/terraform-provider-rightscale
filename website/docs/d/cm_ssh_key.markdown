@@ -67,3 +67,5 @@ The following attributes are exported:
 * `links` - Hrefs of related API resources.
 
 * `material` - (Contextual) Available only if 'sensitive' view is set.
+
+* `href` - Href of the SSH key.

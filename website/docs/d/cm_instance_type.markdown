@@ -66,3 +66,5 @@ The following attributes are exported:
 * `memory` - Instance type memory as displayed in cm platform.
 
 * `links` - Hrefs of related API resources.
+
+* `href` - Href of the instance type.

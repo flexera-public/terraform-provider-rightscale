@@ -55,3 +55,4 @@ The following attributes are exported:
 
 * `links` - Hrefs of related API resources
 
+* `href` - Href of the datacenter
