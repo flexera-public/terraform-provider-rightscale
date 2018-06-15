@@ -83,6 +83,10 @@ func dataSourceDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"href": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -106,5 +110,6 @@ func datasourceDeploymentRead(d *schema.ResourceData, m interface{}) error {
 		d.Set(k, v)
 	}
 	d.SetId(res[0].Locator.Href)
+	d.Set("href", res[0].Locator.Href)
 	return nil
 }

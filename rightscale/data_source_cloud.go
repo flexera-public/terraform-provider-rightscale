@@ -70,9 +70,8 @@ func dataSourceCloud() *schema.Resource {
 				Computed: true,
 			},
 			"href": &schema.Schema{
-				Description: "href of deployment",
-				Type:        schema.TypeString,
-				Computed:    true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
