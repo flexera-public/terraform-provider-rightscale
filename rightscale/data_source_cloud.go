@@ -1,6 +1,8 @@
 package rightscale
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/rightscale/terraform-provider-rightscale/rightscale/rsc"
@@ -92,8 +94,8 @@ func resourceCloudRead(d *schema.ResourceData, m interface{}) error {
 	for k, v := range res[0].Fields {
 		d.Set(k, v)
 	}
-	d.SetId(res[0].Locator.Href)
 	d.Set("href", res[0].Locator.Href)
+	d.SetId(fmt.Sprintf("rs_cm:%s", res[0].Locator.Href))
 	return nil
 }
 
