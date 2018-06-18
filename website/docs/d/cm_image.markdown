@@ -15,17 +15,17 @@ Beware that searching a very popular cloud (say aws us-east) based on name with 
 ## Example Usage #1 - Finding specific AMI in own account based on resource_uid
 
 ```hcl
+data "rightscale_image" "my_sweet_ami" {
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
+  filter {
+    resource_uid = "ami-abcdefg"
+  }
+}
+
 data "rightscale_cloud" "ec2_us_oregon" {
   filter {
     name = "EC2 us-west-2"
     cloud_type = "amazon"
-  }
-}
-
-data "rightscale_image" "my_sweet_ami" {
-  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.id}"
-  filter {
-    resource_uid = "ami-abcdefg"
   }
 }
 ...

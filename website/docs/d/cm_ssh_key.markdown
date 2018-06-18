@@ -17,28 +17,43 @@ data "rightscale_ssh_key" "infra-ssh-key" {
   filter {
     name = "infra"
   }
-  cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
+}
+
+data "rightscale_cloud" "ec2_us_oregon" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
 }
 ```
+
 ## Example Usage 2: Private key material from created resource
 
 ```hcl
 resource "rightscale_ssh_key" "resource_ssh_key" {
   name = "rs-tf-ssh-key"
-  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.id}"
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
 }
 
 data "rightscale_ssh_key" "read_resource_ssh_key" {
   filter {
     name = "${rightscale_ssh_key.resource_ssh_key.name}"
   }
-  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.id}"
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
   view = "sensitive"
   depends_on = ["rightscale_ssh_key.resource_ssh_key"]
 }
 
 output "read-private-key-material" {
   value = "${data.rightscale_ssh_key.read_resource_ssh_key.material}"
+}
+
+data "rightscale_cloud" "ec2_us_oregon" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
 }
 ```
 

@@ -26,8 +26,8 @@ output "server template name" {
   value = "${data.rightscale_server_template.mysql.name}"
 }
 
-output "server template ID" {
-  value = "${data.rightscale_server_template.mysql.id}"
+output "server template href" {
+  value = "${data.rightscale_server_template.mysql.href}"
 }
 ```
 

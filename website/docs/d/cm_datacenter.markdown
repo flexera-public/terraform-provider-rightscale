@@ -16,7 +16,7 @@ Filter block is optional - ommitting it will result in the first available datac
 
 ```hcl
  data "rightscale_datacenter" "ec2-us-east-1a" {
-   cloud_href = "/api/clouds/1"
+   cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
    filter {
      name = "us-east-1a"
    }
@@ -26,8 +26,15 @@ output "datacenter name" {
   value = "${data.rightscale_datacenter.ec2-us-east-1a.name}"
 }
 
-output "datacenter ID" {
-  value = "${data.rightscale_datacenter.ec2-us-east-1a.id}"
+output "datacenter href" {
+  value = "${data.rightscale_datacenter.ec2-us-east-1a.href}"
+}
+
+data "rightscale_cloud" "ec2_us_oregon" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
 }
 ```
 
