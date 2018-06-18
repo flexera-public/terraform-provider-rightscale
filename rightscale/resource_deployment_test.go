@@ -35,6 +35,7 @@ func TestAccRightScaleDeployment_basic(t *testing.T) {
 					testAccCheckDeploymentExists("rightscale_deployment.foobar", &depl),
 					testAccCheckDeploymentDescription(&depl, description),
 					testAccCheckDeploymentServerTagScope(&depl, serverTagScope),
+					testAccCheckDeploymentDatasource("rightscale_deployment.foobar", "data.rightscale_deployment.foobar"),
 				),
 			},
 		},
@@ -87,6 +88,45 @@ func testAccCheckDeploymentExists(n string, depl *cm15.Deployment) resource.Test
 		}
 
 		*depl = *found
+
+		return nil
+	}
+}
+
+func testAccCheckDeploymentDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"description",
+			"locked",
+			"sever_tag_scope",
+			"created_at",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
 
 		return nil
 	}
@@ -157,6 +197,13 @@ resource "rightscale_deployment" "foobar" {
 	name                = %q
 	description         = %q
 	server_tag_scope    = %q
+}
+
+data "rightscale_deployment" "foobar" {
+	filter {
+		name          = "${rightscale_deployment.foobar.name}"
+		description   = "${rightscale_deployment.foobar.description}"
+	}
 }
 `, dep, description, serverTagScope)
 }
