@@ -33,6 +33,7 @@ func TestAccRightScaleInstance_basic(t *testing.T) {
 				Config: testAccInstance_basic(instanceName, cloudHref, subnetHref, imageHref, typeHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("rightscale_instance.test-instance", &inst),
+					testAccCheckInstanceDatasource("rightscale_instance.test-instance", "data.rightscale_instance.test-instance"),
 				),
 			},
 		},
@@ -87,6 +88,7 @@ func TestAccRightScaleInstance_locked(t *testing.T) {
 				Config: testAccInstance_basic(instanceName, cloudHref, subnetHref, imageHref, typeHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("rightscale_instance.test-instance", &inst),
+					testAccCheckInstanceDatasource("rightscale_instance.test-instance", "data.rightscale_instance.test-instance"),
 				),
 			},
 			resource.TestStep{
@@ -122,6 +124,53 @@ func testAccCheckInstanceExists(n string, inst *cm15.Instance) resource.TestChec
 		}
 
 		*inst = *found
+
+		return nil
+	}
+}
+func testAccCheckInstanceDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"id",
+			"locked",
+			"associate_public_ip_address",
+			"cloud_href",
+			"cloud_specific_attributes",
+			"id",
+			"pricing_type",
+			"links",
+			"private_ip_addresses",
+			"public_ip_addresses",
+			"state",
+			"created_at",
+			"bli",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
 
 		return nil
 	}
@@ -186,7 +235,14 @@ resource "rightscale_instance" "test-instance" {
 	instance_type_href  = %q
   associate_public_ip_address = true
 }
-`, name, cloud_href, subnet_href, image_href, instance_type_href)
+
+data "rightscale_instance" "test-instance" {
+	cloud_href = %q
+	filter = {
+		name = "${rightscale_instance.test-instance.name}"
+	}
+}
+`, name, cloud_href, subnet_href, image_href, instance_type_href, cloud_href)
 }
 
 func testAccInstance_locked(name string, cloud_href string, subnet_href string, image_href string, instance_type_href string) string {
