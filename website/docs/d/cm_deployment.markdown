@@ -19,8 +19,8 @@ data "rightscale_deployment" "infrastructure" {
   }
 }
 
-output "prod-infra-us-east-href" {
-  value = "${data.rightscale_deployment.infrastructure.id}"
+output "Deployment href" {
+  value = "${data.rightscale_deployment.infrastructure.href}"
 }
 ```
 

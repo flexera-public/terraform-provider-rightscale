@@ -14,7 +14,7 @@ Use this data source to get the ID or other attributes  of an existing volume fo
 
 ```hcl
 data "rightscale_volume" "a_volume" {
-  cloud_href = "/api/clouds/1"
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
 
   filter {
     name = "my_volume"
@@ -25,8 +25,15 @@ output "volume name" {
   value = "${data.rightscale_volume.a_volume.name}"
 }
 
-output "volume ID" {
-  value = "${data.rightscale_volume.a_volume.id}"
+output "volume href" {
+  value = "${data.rightscale_volume.a_volume.href}"
+}
+
+data "rightscale_cloud" "ec2_us_oregon" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
 }
 ```
 

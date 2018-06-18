@@ -19,15 +19,22 @@ data "rightscale_volume_snapshot" "mysql_master" {
    filter {
      name = "mysql_master"
    }
-   cloud_href = "/api/clouds/1"
+   cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
  }
 
 output "snapshot name" {
   value = "${data.rightscale_volume_snapshot.mysql_master.name}"
 }
 
-output "snapshot ID" {
-  value = "${data.rightscale_volume_snapshot.mysql_master.id}"
+output "snapshot href" {
+  value = "${data.rightscale_volume_snapshot.mysql_master.href}"
+}
+
+data "rightscale_cloud" "ec2_us_oregon" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
 }
 ```
 

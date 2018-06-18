@@ -14,15 +14,28 @@ Use this data source to locate and extract info about an existing [security grou
 
 ```hcl
 data "rightscale_security_group" "infrastructure-us-east-security-group" {
-  cloud_href = "${data.rightscale_cloud.infrastructure-aws-us-east.id}"
+  cloud_href = "${data.rightscale_cloud.infrastructure-aws-us-east.href}"
   filter {
     name = "Infrastructure SG"
-    network_href = "${data.rightscale_network.infrastructure-us-east.id}"
+    network_href = "${data.rightscale_network.infrastructure-us-east.href}"
   }
 }
 
 output "prod-infra-us-east-aws-sg-uid" {
   value = "${data.rightscale_security_group.infrastructure-us-east-security-group.resource_uid}"
+}
+
+data "rightscale_cloud" "infrastructure-aws-us-east" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
+}
+
+data "rightscale_network" "infrastructure-us-east" {
+  filter {
+    name = "Production Infrastructure US-East"
+  }
 }
 ```
 

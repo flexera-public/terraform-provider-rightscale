@@ -16,7 +16,7 @@ Filter block is optional - ommitting it will result in the first available insta
 
 ```hcl
 data "rightscale_instance" "an_instance" {
-  cloud_href = "/api/clouds/1"
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
 
   filter {
     name = "my_instance"
@@ -27,8 +27,15 @@ output "instance name" {
   value = "${data.rightscale_instance.an_instance.name}"
 }
 
-output "instance ID" {
-  value = "${data.rightscale_instance.an_instance.id}"
+output "instance href" {
+  value = "${data.rightscale_instance.an_instance.href}"
+}
+
+data "rightscale_cloud" "ec2_us_oregon" {
+  filter {
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
+  }
 }
 ```
 

@@ -16,12 +16,18 @@ Use this data source to locate and extract info about an existing [route table](
 data "rightscale_route_table" "infrastructure-us-east-route-table" {
   filter {
     name = "Production Infrastructure US-East"
-    network_href = "${data.rightscale_network.infrastructure-us-east.id}"
+    network_href = "${data.rightscale_network.infrastructure-us-east.href}"
   }
 }
 
 output "prod-infra-us-east-route-table-aws-uid" {
   value = "${data.rightscale_route_table.infrastructure-us-east-route-table.resource_uid}"
+}
+
+data "rightscale_network" "infrastructure-us-east" {
+  filter {
+    name = "Production Infrastructure US-East"
+  }
 }
 ```
 

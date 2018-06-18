@@ -13,6 +13,13 @@ Use this data source to get the ID (rightscale href) of an instance type (eg "m4
 ## Example Usage - Get href for instance type "m4.large" in aws us-oregon cloud
 
 ```hcl
+data "rightscale_instance_type" "m4_large" {
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
+  filter {
+    name = "m4.large"
+  }
+}
+
 data "rightscale_cloud" "ec2_us_oregon" {
   filter {
     name = "EC2 us-west-2"
@@ -20,10 +27,10 @@ data "rightscale_cloud" "ec2_us_oregon" {
   }
 }
 
-data "rightscale_instance_type" "m4_large" {
-  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.id}"
+data "rightscale_cloud" "ec2_us_oregon" {
   filter {
-    name = "m4.large"
+    name = "EC2 us-west-2"
+    cloud_type = "amazon"
   }
 }
 ...

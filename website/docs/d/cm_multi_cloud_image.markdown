@@ -26,8 +26,8 @@ output "multi cloud image name" {
   value = "${data.rightscale_multi_cloud_image.centos_64.name}"
 }
 
-output "multi cloud image ID" {
-  value = "${data.rightscale_multi_cloud_image.centos_64.id}"
+output "multi cloud image href" {
+  value = "${data.rightscale_multi_cloud_image.centos_64.href}"
 }
 ```
 
