@@ -37,6 +37,7 @@ func TestAccRightScalesubnet(t *testing.T) {
 					testAccCheckSubnetExists("rightscale_subnet.test_subnet", &depl),
 					testAccCheckSubnetDescription(&depl, subnetDescription),
 					testAccCheckSubnetCidrBlock(&depl, subnetCidrBlock),
+					testAccCheckSubnetDatasource("rightscale_subnet.test_subnet", "data.rightscale_subnet.test_subnet"),
 				),
 			},
 		},
@@ -86,6 +87,46 @@ func testAccCheckSubnetCidrBlock(depl *cm15.Subnet, cidr string) resource.TestCh
 	}
 }
 
+func testAccCheckSubnetDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"description",
+			"resource_uid",
+			"cidr_block",
+			"is_default",
+			"state",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckSubnetDestroy(s *terraform.State) error {
 	c := getCMClient()
 
@@ -118,11 +159,17 @@ func testAccCheckSubnetDestroy(s *terraform.State) error {
 func testAccSubnet(name string, desc string, cidr string, cloud string, network string) string {
 	return fmt.Sprintf(`
 		resource "rightscale_subnet" "test_subnet" {
-		   name = %q
-		   description = %q
-		   cidr_block = %q
-		   cloud_href = %q
+		   name         = %q
+		   description  = %q
+		   cidr_block   = %q
+		   cloud_href   = %q
 		   network_href = %q
 		 }
-`, name, desc, cidr, cloud, network)
+		data "rightscale_subnet" "test_subnet" {
+			cloud_href  = %q
+			filter {
+				name          = "${rightscale_subnet.test_subnet.name}"
+			}
+		}
+`, name, desc, cidr, cloud, network, cloud)
 }
