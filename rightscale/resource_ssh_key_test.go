@@ -60,6 +60,44 @@ func testAccCheckSSHKeyExists(n string, sshKey *cm15.SshKey) resource.TestCheckF
 	}
 }
 
+func testAccCheckSSHKeyDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"resource_uid",
+			"created_at",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			fmt.Printf("k: %v, v: %v \n", attr, rsAttr[attr])
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckSSHKeyDestroy(s *terraform.State) error {
 	c := getCMClient()
 
@@ -95,5 +133,12 @@ resource "rightscale_ssh_key" "ssh_key_test" {
 	name                = %q
 	cloud_href          = %q
 }
-`, name, cloud_href)
+
+data "rightscale_ssh_key" "ssh_key_test" {
+	cloud_href          = %q
+	filter {
+		name            = "${rightscale_ssh_key.ssh_key_test.name}"
+	}
+}
+`, name, cloud_href, cloud_href)
 }
