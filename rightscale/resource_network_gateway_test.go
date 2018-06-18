@@ -35,6 +35,7 @@ func TestAccRightScaleNetworkGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkGatewayExists("rightscale_network_gateway.test_network_gateway", &depl),
 					testAccCheckNetworkGatewayDescription(&depl, networkGatewayDescription),
+					testAccCheckNetworkGatewayDatasource("rightscale_network_gateway.test_network_gateway", "data.rightscale_network_gateway.test_network_gateway"),
 				),
 			},
 		},
@@ -60,6 +61,46 @@ func testAccCheckNetworkGatewayExists(n string, depl *cm15.NetworkGateway) resou
 		}
 
 		*depl = *found
+
+		return nil
+	}
+}
+
+func testAccCheckNetworkGatewayDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"resource_uid",
+			"type",
+			"state",
+			"description",
+			"links",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
 
 		return nil
 	}
@@ -111,6 +152,12 @@ func testAccNetworkGateway(name string, desc string, typ string, cloud string) s
 		   description = %q
 		   type = %q
 		   cloud_href = %q
+		 }
+
+		 data "rightscale_network_gateway" "test_network_gateway" {
+			 filter {
+				 name = "${rightscale_network_gateway.test_network_gateway.name}"
+			 }
 		 }
 `, name, desc, typ, cloud)
 }
