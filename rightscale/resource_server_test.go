@@ -36,6 +36,7 @@ func TestAccRightScaleServer_basic(t *testing.T) {
 				Config: testAccServer_basic(serverName, instanceName, cloudHref, imageHref, typeHref, deploymentHref, templateHref, subnetHref),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists("rightscale_server.test-server", &server),
+					testAccCheckServerDatasource("rightscale_server.test-server", "data.rightscale_server.test-server"),
 				),
 			},
 		},
@@ -91,6 +92,44 @@ func testAccCheckServerExists(n string, server *cm15.Server) resource.TestCheckF
 		}
 
 		*server = *found
+
+		return nil
+	}
+}
+
+func testAccCheckServerDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"description",
+			"optimized",
+			"cloud_href",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
 
 		return nil
 	}
@@ -184,6 +223,12 @@ resource "rightscale_server" "test-server" {
 	server_template_href = %q
 	subnet_hrefs         = [%q]
   }
+}
+
+data "rightscale_server" "test-server" {
+	filter {
+		name          = "${rightscale_server.test-server.name}"
+	}
 }
   `, serverName, deploymentHref, cloudHref, imageHref, typeHref, instanceName, templateHref, subnetHref)
 }

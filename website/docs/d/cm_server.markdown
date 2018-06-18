@@ -41,13 +41,13 @@ resource "rightscale_security_group" "sg_web_out" {
 
 The following arguments are supported:
 
-The `filter` block supports:
+The `filter` (optional) block supports:
 
-* `deployment_href` - The href of the deployment
+* `deployment_href` - (Optional) The href of the deployment
 
-* `name` - The name of the server
+* `name` - (Optional) The name of the server
 
-* `cloud_href` - The Href of the cloud with the ssh key you want
+* `cloud_href` - (Optional) The Href of the cloud with the ssh key you want
 
 ## Attributes Reference
 
