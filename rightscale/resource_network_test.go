@@ -37,6 +37,7 @@ func TestAccRightScaleNetwork(t *testing.T) {
 					testAccCheckNetworkExists("rightscale_network.test_network", &depl),
 					testAccCheckNetworkDescription(&depl, networkDescription),
 					testAccCheckNetworkCidrBlock(&depl, networkCidrBlock),
+					testAccCheckNetworkDatasource("rightscale_network.test_network", "data.rightscale_network.test_network"),
 				),
 			},
 		},
@@ -62,6 +63,46 @@ func testAccCheckNetworkExists(n string, depl *cm15.Network) resource.TestCheckF
 		}
 
 		*depl = *found
+
+		return nil
+	}
+}
+
+func testAccCheckNetworkDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"resource_uid",
+			"cidr_block",
+			"instance_tenancy",
+			"links",
+			"description",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
 
 		return nil
 	}
@@ -123,5 +164,11 @@ func testAccNetwork(name string, desc string, cidr string, cloud string) string 
 		   cidr_block = %q
 		   cloud_href = %q
 		 }
+
+		data "rightscale_network" "test_network" {
+			filter {
+				name = "${rightscale_network.test_network.name}"
+			}
+		}
 `, name, desc, cidr, cloud)
 }
