@@ -37,6 +37,7 @@ func TestAccRightScaleSecurityGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("rightscale_security_group.test_sg", &depl),
 					testAccCheckSecurityGroupDescription(&depl, securityGroupDescription),
+					testAccCheckSecurityGroupDatasource("rightscale_security_group.test_sg", "data.rightscale_security_group.test_sg"),
 				),
 			},
 		},
@@ -78,6 +79,44 @@ func testAccCheckSecurityGroupDescription(depl *cm15.SecurityGroup, desc string)
 
 }
 
+func testAccCheckSecurityGroupDatasource(n, d string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		// Check datasource output matches resource
+		ds, ok := s.RootModule().Resources[d]
+		if !ok {
+			return fmt.Errorf("Not found: %s", d)
+		}
+
+		dsAttr := ds.Primary.Attributes
+		rsAttr := rs.Primary.Attributes
+
+		credentialAttrToCheck := []string{
+			"name",
+			"description",
+			"resource_uid",
+			"created_at",
+		}
+
+		for _, attr := range credentialAttrToCheck {
+			if dsAttr[attr] != rsAttr[attr] {
+				return fmt.Errorf(
+					"%s is %s; want %s",
+					attr,
+					dsAttr[attr],
+					rsAttr[attr],
+				)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	c := getCMClient()
 
@@ -115,5 +154,12 @@ func testAccSecurityGroup(name string, desc string, cloud string, network string
 		   cloud_href = %q
 		   network_href = %q
 		 }
-`, name, desc, cloud, network)
+		 
+		data "rightscale_security_group" "test_sg" {
+			cloud_href = %q
+			filter {
+				name = "${rightscale_security_group.test_sg.name}"
+			}
+		  }
+`, name, desc, cloud, network, cloud)
 }
