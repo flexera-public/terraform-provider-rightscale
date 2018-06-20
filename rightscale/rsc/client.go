@@ -1039,7 +1039,7 @@ func performRequestWithRetries(rs *rsapi.API, req *http.Request) (resp *http.Res
 		if !shouldRetry(resp, err) {
 			break
 		}
-		log.Printf("[WARN] Sleeping %d seconds and retrying failed request (retry %d)\n", 10*i, i)
+		log.Printf("[WARN] Sleeping %d seconds and retrying failed request (retry %d, error %s)\n", 10*i, i, err)
 		time.Sleep(time.Duration(i) * 10 * time.Second)
 	}
 	return
