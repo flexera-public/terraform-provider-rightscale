@@ -25,7 +25,7 @@ var (
 	ErrNotFound = fmt.Errorf("resource not found")
 
 	// rshosts lists the RightScale API hostnames.
-	rshosts = []string{"us-3.rightscale.com", "us-4.rightscale.com"}
+	rshosts = []string{"crunis1-moo-403.test.rightscale.com"}
 )
 
 type (
@@ -824,7 +824,7 @@ func (rsc *client) requestCWF(method, url string, params, payload rsapi.APIParam
 	if err != nil {
 		return nil, err
 	}
-	req.Host = strings.Replace(rsc.rs.Host, "us-", "cloud-workflow", 1)
+	req.Host = "crunis1-cloud-workflow-403.test.rightscale.com"
 
 	res, err := performRequestWithRetries(rsc.rs, req)
 	if err != nil {
@@ -1039,7 +1039,7 @@ func performRequestWithRetries(rs *rsapi.API, req *http.Request) (resp *http.Res
 		if !shouldRetry(resp, err) {
 			break
 		}
-		log.Printf("[WARN] Sleeping %d seconds and retrying failed request (retry %d, error %s)\n", 10*i, i, err)
+		log.Printf("[WARN] Sleeping %d seconds and retrying failed request (retry %d, error: %s)\n", 10*i, i, err)
 		time.Sleep(time.Duration(i) * 10 * time.Second)
 	}
 	return
