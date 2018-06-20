@@ -32,6 +32,7 @@ func TestAccRSCloudDatasource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRSCloudExists("data.rightscale_cloud.a_cloud", &cloudHref),
 					testAccCheckRSCloudHref(&cloudHref, validCloudHref),
+					testAccCheckRSCloudKeys("data.rightscale_cloud.a_cloud"),
 				),
 			},
 		},
@@ -71,6 +72,31 @@ func testAccCheckRSCloudExists(n string, ch *string) resource.TestCheckFunc {
 		}
 
 		*ch = getHrefFromID(rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckRSCloudKeys(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		attributes := []string{
+			"name",
+			"description",
+			"display_name",
+			"cloud_type",
+			"href",
+			"id",
+		}
+
+		for _, attr := range attributes {
+			if _, ok := rs.Primary.Attributes[attr]; !ok {
+				return fmt.Errorf("Datasource doesn't contain attribute %s", attr)
+			}
+		}
 		return nil
 	}
 }

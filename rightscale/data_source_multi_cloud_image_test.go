@@ -32,6 +32,7 @@ func TestAccRSMCIDatasource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRSMCIExists("data.rightscale_multi_cloud_image.a_mci", &MCIHref),
 					testAccCheckRSMCIHref(&MCIHref, validMCIHref),
+					testAccCheckRSMCIKeys("data.rightscale_multi_cloud_image.a_mci"),
 				),
 			},
 		},
@@ -68,6 +69,30 @@ func testAccCheckRSMCIExists(n string, dh *string) resource.TestCheckFunc {
 		}
 
 		*dh = getHrefFromID(rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckRSMCIKeys(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		attributes := []string{
+			"name",
+			"description",
+			"revision",
+			"href",
+			"id",
+		}
+
+		for _, attr := range attributes {
+			if _, ok := rs.Primary.Attributes[attr]; !ok {
+				return fmt.Errorf("Datasource doesn't contain attribute %s", attr)
+			}
+		}
 		return nil
 	}
 }

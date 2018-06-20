@@ -32,6 +32,7 @@ func TestAccRSServerTemplateDatasource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRSServerTemplateExists("data.rightscale_server_template.a_server_template", &objHref),
 					testAccCheckRSServerTemplateHref(&objHref, validObjHref),
+					testAccCheckRSServerTemplateKeys("data.rightscale_server_template.a_server_template"),
 				),
 			},
 		},
@@ -68,6 +69,31 @@ func testAccCheckRSServerTemplateExists(n string, ch *string) resource.TestCheck
 		}
 
 		*ch = getHrefFromID(rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckRSServerTemplateKeys(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		attributes := []string{
+			"id",
+			"href",
+			"name",
+			"description",
+			"revision",
+			"lineage",
+		}
+
+		for _, attr := range attributes {
+			if _, ok := rs.Primary.Attributes[attr]; !ok {
+				return fmt.Errorf("Datasource doesn't contain attribute %s", attr)
+			}
+		}
 		return nil
 	}
 }

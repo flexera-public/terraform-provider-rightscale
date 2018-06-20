@@ -34,6 +34,7 @@ func TestAccRSVolumeSnapshotDatasource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRSVolumeSnapshotExists("data.rightscale_volume_snapshot.a_volume_snapshot", &objHref),
 					testAccCheckRSVolumeSnapshotHref(&objHref, validObjHref),
+					testAccCheckRSVolumeSnapshotKeys("data.rightscale_volume_snapshot.a_volume_snapshot"),
 				),
 			},
 		},
@@ -74,6 +75,34 @@ func testAccCheckRSVolumeSnapshotExists(n string, ch *string) resource.TestCheck
 		}
 
 		*ch = getHrefFromID(rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckRSVolumeSnapshotKeys(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		attributes := []string{
+			"id",
+			"href",
+			"name",
+			"state",
+			"resource_uid",
+			"description",
+			"size",
+			"created_at",
+			"cloud_href",
+		}
+
+		for _, attr := range attributes {
+			if _, ok := rs.Primary.Attributes[attr]; !ok {
+				return fmt.Errorf("Datasource doesn't contain attribute %s", attr)
+			}
+		}
 		return nil
 	}
 }

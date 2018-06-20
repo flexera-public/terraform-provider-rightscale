@@ -34,6 +34,7 @@ func TestAccRSVolumeTypeDatasource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRSVolumeTypeExists("data.rightscale_volume_type.a_volume_type", &objHref),
 					testAccCheckRSVolumeTypeHref(&objHref, validObjHref),
+					testAccCheckRSVolumeTypeKeys("data.rightscale_volume_type.a_volume_type"),
 				),
 			},
 		},
@@ -71,6 +72,33 @@ func testAccCheckRSVolumeTypeExists(n string, ch *string) resource.TestCheckFunc
 		}
 
 		*ch = getHrefFromID(rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckRSVolumeTypeKeys(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		attributes := []string{
+			"name",
+			"description",
+			"resource_uid",
+			"id",
+			"href",
+			"cloud_href",
+			"created_at",
+			"updated_at",
+		}
+
+		for _, attr := range attributes {
+			if _, ok := rs.Primary.Attributes[attr]; !ok {
+				return fmt.Errorf("Datasource doesn't contain attribute %s", attr)
+			}
+		}
 		return nil
 	}
 }

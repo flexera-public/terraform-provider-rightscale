@@ -32,6 +32,7 @@ func TestAccRSRouteTableatasource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRSRouteTableExists("data.rightscale_route_table.a_route_table", &objHref),
 					testAccCheckRSRouteTableHref(&objHref, validObjHref),
+					testAccCheckRSRouteTableKeys("data.rightscale_route_table.a_route_table"),
 				),
 			},
 		},
@@ -68,6 +69,30 @@ func testAccCheckRSRouteTableExists(n string, ch *string) resource.TestCheckFunc
 		}
 
 		*ch = getHrefFromID(rs.Primary.ID)
+		return nil
+	}
+}
+
+func testAccCheckRSRouteTableKeys(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		attributes := []string{
+			"id",
+			"href",
+			"name",
+			"description",
+			"resource_uid",
+		}
+
+		for _, attr := range attributes {
+			if _, ok := rs.Primary.Attributes[attr]; !ok {
+				return fmt.Errorf("Datasource doesn't contain attribute %s", attr)
+			}
+		}
 		return nil
 	}
 }
