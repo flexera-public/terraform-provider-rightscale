@@ -76,7 +76,7 @@ func dataSourceDeployment() *schema.Resource {
 				Computed: true,
 			},
 			"locked": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"server_tag_scope": {
@@ -109,7 +109,7 @@ func datasourceDeploymentRead(d *schema.ResourceData, m interface{}) error {
 	for k, v := range res[0].Fields {
 		d.Set(k, v)
 	}
-	d.SetId(res[0].Locator.Href)
 	d.Set("href", res[0].Locator.Href)
+	d.SetId(res[0].Locator.Namespace + ":" + res[0].Locator.Href)
 	return nil
 }

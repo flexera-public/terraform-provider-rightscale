@@ -140,7 +140,7 @@ func resourceVolumeSnapshotRead(d *schema.ResourceData, m interface{}) error {
 	for k, v := range res[0].Fields {
 		d.Set(k, v)
 	}
-	d.SetId(res[0].Locator.Href)
 	d.Set("href", res[0].Locator.Href)
+	d.SetId(res[0].Locator.Namespace + ":" + res[0].Locator.Href)
 	return nil
 }
