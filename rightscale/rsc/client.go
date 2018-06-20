@@ -220,35 +220,6 @@ func New(token string, projectID int) (Client, error) {
 	return nil, fmt.Errorf("failed to authenticate")
 }
 
-func performRequestWithRetries(rs *rsapi.API, req *http.Request) (resp *http.Response, err error) {
-	const retries = 3
-
-	for i := 0; i < retries+1; i++ {
-		fmt.Printf("Making request with retries, try %d ... \n", i)
-		resp, err = rs.PerformRequest(req)
-		if !shouldRetry(resp, err) {
-			break
-		}
-		fmt.Printf("STEEL-288 Sleeping %d seconds and retrying failed request\n", 10*i)
-		time.Sleep(time.Duration(i) * 10 * time.Second)
-	}
-	return
-}
-
-func shouldRetry(resp *http.Response, err error) bool {
-	if err != nil {
-		if neterr, ok := err.(net.Error); ok && neterr.Timeout() {
-			return true
-		}
-	}
-	if resp != nil {
-		if resp.StatusCode == 500 || resp.StatusCode == 503 {
-			return true
-		}
-	}
-	return false
-}
-
 // List retrieves the list of resources pointed to by l optionally filtering the
 // results with the given filters. The supported filters differ depending on
 // the underlying resource, refer to the RightScale API 1.5 docs for details on
@@ -1056,4 +1027,36 @@ func getUserInfo(rs *rsapi.API, uid string) map[string]interface{} {
 // generates a string from the user's map[string]interface{}
 func userString(u map[string]interface{}) string {
 	return fmt.Sprintf("%s %s via Terraform", u["first_name"], u["last_name"])
+}
+
+// performRequestWithRetries executes PerformRequest and retries up to 3 times only in the scenarios
+// considered in shouldRetry()
+func performRequestWithRetries(rs *rsapi.API, req *http.Request) (resp *http.Response, err error) {
+	const retries = 3
+
+	for i := 1; i < retries+2; i++ {
+		resp, err = rs.PerformRequest(req)
+		if !shouldRetry(resp, err) {
+			break
+		}
+		log.Printf("[WARN] Sleeping %d seconds and retrying failed request (retry %d)\n", 10*i, i)
+		time.Sleep(time.Duration(i) * 10 * time.Second)
+	}
+	return
+}
+
+// shouldRetry returns true if the network error is worth retrying
+// currently Timeout or 500 or 503
+func shouldRetry(resp *http.Response, err error) bool {
+	if err != nil {
+		if neterr, ok := err.(net.Error); ok && neterr.Timeout() {
+			return true
+		}
+	}
+	if resp != nil {
+		if resp.StatusCode == 500 || resp.StatusCode == 503 {
+			return true
+		}
+	}
+	return false
 }
