@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_server_template
 
-Use this data source to get the ID or other attributes of a server template in your account for use in other resources.
+Use this data source to get the Href or other attributes of a server template in your account for use in other resources.
 
 Filter block is optional - ommitting it will result in the first available server template in a given cloud.
 
@@ -36,8 +36,6 @@ output "server template href" {
 The following arguments are supported:
 
 * `filter` (OPTIONAL) - The filter block supports:
-
-  * `id` - The server template ID (e.g. /api/server_templates/401991004)
 
   * `name` - The name of the server template
   

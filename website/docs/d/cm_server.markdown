@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_server
 
-Use this data source to get the ID of an existing server for use in other resources.
+Use this data source to locate and extract info about an existing [server](http://reference.rightscale.com/api1.5/resources/ResourceServers.html) to pass to other rightscale resources.
 
 ## Example Usage 1: Basic configuration of a server data source
 
@@ -29,7 +29,7 @@ data "rightscale_server" "web_server" {
 }
 
 resource "rightscale_security_group" "sg_web_out" {
-  name = "${data.rigthscale.web_server.name}"
+  name = "${data.rigthscale_server.web_server.name}"
   cloud_href = "/api/clouds/1234"
   deployment_href = "/api/deployments/1234
   description = "Web server security group"
@@ -47,7 +47,7 @@ The `filter` block supports:
 
 * `name` - The name of the server
 
-* `cloud_href` - The ID of the cloud with the ssh key you want
+* `cloud_href` - The Href of the cloud with the ssh key you want
 
 ## Attributes Reference
 

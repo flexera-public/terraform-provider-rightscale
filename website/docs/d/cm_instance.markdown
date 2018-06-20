@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_instance
 
-Use this data source to get the Href or other attributes of an existing instance for use in other resources.
+Use this data source to locate and extract info about an existing [instance](http://reference.rightscale.com/api1.5/resources/ResourceInstances.html) to pass to other rightscale resources.
 
 Filter block is optional - ommitting it will result in the first available instance in a given cloud.
 

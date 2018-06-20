@@ -8,7 +8,8 @@ description: |-
 
 # rightscale_credential
 
-Use this data source to locate and extract the data of an existing credential to pass to other rightscale resources, or to access the values.  Viewing values of credentials assumes requisite account permission levels.
+Use this data source to locate and extract info about an existing [credential](http://reference.rightscale.com/api1.5/resources/ResourceCredentials.html) to pass to other rightscale resources.
+Viewing values of credentials assumes requisite account permission levels.
 
 ## Example Usage: Access credential value
 

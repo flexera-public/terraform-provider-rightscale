@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_volume_type
 
-Use this data source to get the ID or other attributes of an existing volume type (as defined by a given cloud) for use in other resources.
+Use this data source to locate and extract info about an existing [volume type](http://reference.rightscale.com/api1.5/media_types/MediaTypeVolumeType.html) to pass to other rightscale resources.
 
 Filter block is optional - ommitting it will result in the first available volume_type in a given cloud.
 
@@ -41,8 +41,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The volume type ID (e.g. /api/clouds/1/volume_types/B37A8VOCJIODH)
-
 * `name` - The name of the volume type.
 
 * `description` - The description of the volume type.
@@ -57,4 +55,6 @@ The following attributes are exported:
 
 * `updated_at` - Last update of the volume type
 
-* `href` - Href of the volume type
+* `id` - The volume type ID (e.g. rs_cm:/api/clouds/1/volume_types/B37A8VOCJIODH)
+
+* `href` - Href of the volume type (e.g. /api/clouds/1/volume_types/B37A8VOCJIODH)
