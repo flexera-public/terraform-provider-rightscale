@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_instance_type
 
-Use this data source to get the ID (rightscale href) of an instance type (eg "m4.large" vs "n1-standard" vs "DSv2") in a specific cloud for use in other resources.
+Use this data source to get the HRef of an instance type (eg "m4.large" vs "n1-standard" vs "DSv2") in a specific cloud for use in other resources.
 
 ## Example Usage - Get href for instance type "m4.large" in aws us-oregon cloud
 

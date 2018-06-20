@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_datacenter
 
-Use this data source to get the ID or other attributes of an existing datacenter for use in other resources.
+Use this data source to get the Href or other attributes of an existing datacenter for use in other resources.
 
 Filter block is optional - ommitting it will result in the first available datacenter in a given cloud.
 
@@ -48,7 +48,7 @@ The following arguments are supported:
 
   * `name` - The name of the datacenter
 
-  * `resource_id` - The resource_uid of the datacenter.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
+  * `resource_uid` - The resource_uid of the datacenter.  If this filter option is set, additional retry logic will be enabled to wait up to 5 minutes for cloud resources to be polled and populated for use.
 
 ## Attributes Reference
 

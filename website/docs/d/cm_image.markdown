@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_image
 
-Use this data source to get the ID (rightscale href) of a registered image in a specific cloud for use in other resources.  Sets default filter scope to own account, but allows for public searching if specified in filter block.
+Use this data source to get the Href of a registered image in a specific cloud for use in other resources. Sets default filter scope to own account, but allows for public searching if specified in filter block.
 
 Beware that searching a very popular cloud (say aws us-east) based on name with 'visibility = "public"' is gonna be slow...
 

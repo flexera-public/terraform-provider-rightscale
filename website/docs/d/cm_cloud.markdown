@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_cloud
 
-Use this data source to get the ID of a registered clouds for use in other
+Use this data source to get the Href of a registered clouds for use in other
 resources.  Registration of clouds in a given RightScale account will need to have been executed ahead of time to define it as a cloud datasource. 
 
 ## Example Usage

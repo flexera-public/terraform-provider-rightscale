@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_instance
 
-Use this data source to get the ID or other attributes of an existing instance for use in other resources.
+Use this data source to get the Href or other attributes of an existing instance for use in other resources.
 
 Filter block is optional - ommitting it will result in the first available instance in a given cloud.
 
@@ -55,9 +55,9 @@ The following arguments are supported:
 
   * `os_platform` - The OS platform of the instance. One of "linux" or "windows"
 
-  * `parent_href` - The ID of instance server or server array parent resource.
+  * `parent_href` - The Href of instance server or server array parent resource.
 
-  * `server_template_href` - The ID of the instance server template resource
+  * `server_template_href` - The Href of the instance server template resource
 
   * `public_dns_name` - The public DNS name of the instance
 
