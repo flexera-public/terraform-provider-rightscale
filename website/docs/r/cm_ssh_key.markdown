@@ -8,14 +8,14 @@ description: |-
 
 # rightscale_ssh_key
 
-Use this resource to create, update or destroy ssh keys in a given cloud.
+Use this resource to create, update or destroy RightScale [SSH keys](http://reference.rightscale.com/api1.5/resources/ResourceSshKeys.html).
 
 ## Example Usage
 
 ```hcl
 resource "rightscale_ssh_key" "infra-ssh-key" {
   name = "infra"
-  cloud_href = ${data.rightscale_cloud.ec2_us_east_1.id}
+  cloud_href = ${data.rightscale_cloud.ec2_us_east_1.href}
 }
 ```
 

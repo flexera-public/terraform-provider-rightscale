@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_server_array
 
-Use this resource to create, update or destroy a RightScale server_array
+Use this resource to create, update or destroy RightScale [server arrays](http://reference.rightscale.com/api1.5/resources/ResourceServerArrays.html).
 
 ## Example Usage : Basic configuration of a server_array resource
 
@@ -67,7 +67,7 @@ The following arguments are supported:
 
 * `state` - (Required) he status of the server array. If enabled, the server array is enabled for scaling actions. One of "enabled" or "disabled"
 
-* `deployment_href` - (Required) ID of deployment in which to create server_array
+* `deployment_href` - (Required) Href of deployment in which to create server_array
 
 * `array_type` - (Required) The type of server_array. One of "alert" or "queue"
 

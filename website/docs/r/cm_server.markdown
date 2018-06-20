@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_server
 
-Use this resource to create, update or destroy a RightScale server.
+Use this resource to create, update or destroy RightScale [servers](http://reference.rightscale.com/api1.5/resources/ResourceServers.html).
 
 ## Example Usage : Basic configuration of a server resource
 
@@ -45,7 +45,7 @@ The following arguments are supported:
 
 * `optimized` - (Optional) A flag indicating whether Instances of this Server should be optimized for high-performance volumes
 
-* `cloud_href` - (Required) The ID of the cloud with the ssh key you want
+* `cloud_href` - (Required) The Href of the cloud with the ssh key you want
 
 * `tags` - (Optional) Any tags you want attached to the server and any instances created from this server object
 

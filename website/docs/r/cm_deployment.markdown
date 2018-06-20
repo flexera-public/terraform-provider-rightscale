@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_deployment
 
-Use this resource to create, update or destroy RightScale [deployments](http://docs.rightscale.com/cm/dashboard/manage/deployments/index.html) in cloud management.
+Use this resource to create, update or destroy RightScale [deployments](http://reference.rightscale.com/api1.5/resources/ResourceDeployments.html).
 
 ## Example Usage
 

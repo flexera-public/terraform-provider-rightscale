@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_instance
 
-Use this resource to create, update or destroy an instance.
+Use this resource to create, update or destroy RightScale [instances](http://reference.rightscale.com/api1.5/resources/ResourceInstances.html).
 
 ## Example Usage : Basic configuration of an instance resource
 

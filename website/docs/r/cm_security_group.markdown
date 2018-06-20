@@ -29,7 +29,7 @@ output "us-oregon-devops-vpc-sg-href" {
 
 The following arguments are supported:
 
-* `cloud_href` - (Required) Cloud you want to create the security group in.
+* `cloud_href` - (Required) Href of the cloud you want to create the security group in.
 
 * `network_href` - (Required) Href of the network to create the security group in.
 

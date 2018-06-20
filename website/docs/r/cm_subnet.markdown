@@ -16,8 +16,8 @@ Use this resource to create, update or destroy RightScale [subnets](http://refer
 resource "rightscale_subnet" "devops-oregon-subnet-a" {
   name = "devops-oregon-vpc-a"
   description = "AWS US Oregon Subnet for devopery in az 'a'"
-  cloud_href = "${data.rightscale_cloud.aws-oregon.id}"
-  datacenter_href = "${data.rightscale_datacenter.ec2_us_oregon_a.id}"
+  cloud_href = "${data.rightscale_cloud.aws-oregon.href}"
+  datacenter_href = "${data.rightscale_datacenter.ec2_us_oregon_a.href}"
   network_href = "${rightscale_network.aws-oregon-devops-vpc.href}"
   cidr_block = "192.168.8.0/24"
 }

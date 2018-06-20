@@ -16,8 +16,8 @@ Use this resource to create, update or destroy RightScale [route tables](http://
 resource "rightscale_route_table" "us-oregon-devops-vpc-route-table" {
   name = "us-oregon-devops-vpc-route-table"
   description = "AWS US Oregon vpc route table for devopery"
-  cloud_href = "${data.rightscale_cloud.us-oregon.id}"
-  network_href = "${rightscale_network.us-oregon-devops-vpc.id}
+  cloud_href = "${data.rightscale_cloud.us-oregon.href}"
+  network_href = "${rightscale_network.us-oregon-devops-vpc.href}
 }
 
 output "us-oregon-devops-vpc-route-table-aws-uid" {

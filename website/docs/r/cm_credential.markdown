@@ -8,7 +8,7 @@ description: |-
 
 # rightscale_credential
 
-Use this resource to create, read, update or destroy RightScale credential objects.
+Use this resource to create, update or destroy RightScale [credentials](http://reference.rightscale.com/api1.5/resources/ResourceCredentials.html).
 
 ## Example Usage
 
