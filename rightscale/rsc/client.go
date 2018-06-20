@@ -229,6 +229,8 @@ func performRequestWithRetries(rs *rsapi.API, req *http.Request) (resp *http.Res
 		if !shouldRetry(resp, err) {
 			break
 		}
+		fmt.Printf("STEEL-288 Sleeping %d seconds and retrying failed request\n", 10*i)
+		time.Sleep(time.Duration(i) * 10 * time.Second)
 	}
 	return
 }
