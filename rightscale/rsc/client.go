@@ -1062,7 +1062,7 @@ func shouldRetry(resp *http.Response, err error) bool {
 		}
 	}
 	if resp != nil {
-		if resp.StatusCode == 500 || resp.StatusCode == 503 {
+		if resp.StatusCode == 500 || resp.StatusCode == 502 || resp.StatusCode == 503 {
 			return true
 		}
 	}
