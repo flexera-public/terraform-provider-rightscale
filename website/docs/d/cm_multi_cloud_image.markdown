@@ -39,8 +39,6 @@ The following arguments are supported:
 
 * `filter` (OPTIONAL) - The filter block supports:
 
-  * `id` - The multi cloud image ID (e.g. /api/clouds/1/multi_cloud_images/4VODPN6TQ60RC)
-
   * `name` - The name of the multi cloud image
 
   * `description` - The description of the multi cloud image

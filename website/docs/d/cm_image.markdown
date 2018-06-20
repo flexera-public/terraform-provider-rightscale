@@ -44,7 +44,7 @@ data "rightscale_cloud" "ec2_us_oregon" {
 }
 
 data "rightscale_image" "my_sweet_ami" {
-  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.id}"
+  cloud_href = "${data.rightscale_cloud.ec2_us_oregon.href}"
   visibility = "public"
   filter {
     name = "My Super Great AMI"
@@ -61,7 +61,7 @@ data "rightscale_image" "my_sweet_ami" {
 
 The following arguments are supported:
 
-* `cloud_href` - (Required) The ID of the cloud with the image you want.
+* `cloud_href` - (Required) The Href of the cloud with the image you want.
 
 * `filter` - (Optional) block supports:
 

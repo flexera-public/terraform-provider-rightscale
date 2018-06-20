@@ -49,8 +49,6 @@ The following arguments are supported:
 
 * `filter` (OPTIONAL) - The filter block supports:
 
-  * `id` - The instance ID (e.g. /api/clouds/1/instances/63NFHKF8B7RP4)
-
   * `name` - The name of the instance
 
   * `state` - The state of the instance (e.g.: operational, terminated, stranded, ...)
@@ -89,8 +87,6 @@ The following attributes are exported:
 
 * `cloud_specific_attributes` - Attributes specific to the cloud the instance belongs to
 
-* `id` - The instance ID (e.g. /api/clouds/1/instances/63NFHKF8B7RP4)
-
 * `name` - The name of the instance
 
 * `pricing_type` - Pricing type of the instance (e.g. fixed, spot)
@@ -111,4 +107,6 @@ The following attributes are exported:
 
 * `updated_at` - Last update of the instance
 
-* `href` - Href of the instance
+* `id` - The instance ID (e.g. rs_cm:/api/clouds/1/instances/63NFHKF8B7RP4)
+
+* `href` - Href of the instance (e.g. /api/clouds/1/instances/63NFHKF8B7RP4)

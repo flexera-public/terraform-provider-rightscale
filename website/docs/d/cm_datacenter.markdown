@@ -42,7 +42,7 @@ data "rightscale_cloud" "ec2_us_oregon" {
 
 The following arguments are supported:
 
-* `cloud_href` (REQUIRED) - The cloud_href the datacenter belongs to
+* `cloud_href` (REQUIRED) - The Href of the cloud the datacenter belongs to
 
 * `filter` (OPTIONAL) - The filter block supports:
 
@@ -58,8 +58,10 @@ The following attributes are exported:
 
 * `description` - The description of the datacenter
 
-* `resource_id` - The resource_uid of the datacenter as reported by the rightscale platform
+* `resource_uid` - The resource_uid of the datacenter as reported by the rightscale platform
 
 * `links` - Hrefs of related API resources
+
+* `cloud_href` - Href of the cloud the datacenter belongs to
 
 * `href` - Href of the datacenter

@@ -42,7 +42,7 @@ data "rightscale_cloud" "ec2_us_oregon" {
 
 The following arguments are supported:
 
-* `cloud_href` - (Required) The ID of the cloud with the instance type you want.
+* `cloud_href` - (Required) The Href of the cloud with the instance type you want.
 
 * `filter` - (Optional) block supports:
 
