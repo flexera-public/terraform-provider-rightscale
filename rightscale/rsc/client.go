@@ -601,9 +601,19 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 		projectID   = strconv.Itoa(rsc.ProjectID)
 		processHref string
 		processID   string
+		name        interface{}
+		email       interface{}
 	)
 	{
-		u, _ := rsc.GetUser()
+		u, err := rsc.GetUser()
+		if err != nil {
+			name = "Terraform User"
+			email = "unknown"
+		} else {
+			name = userString(u)
+			email = u["email"]
+		}
+
 		payload := rsapi.APIParams{
 			"source":      source,
 			"main":        "main",
@@ -612,8 +622,8 @@ func (rsc *client) RunProcess(source string, params []*Parameter) (*Process, err
 			"application": "cwfconsole",
 			"created_by": map[string]interface{}{
 				"id":    0,
-				"name":  userString(u),
-				"email": u["email"],
+				"name":  name,
+				"email": email,
 			},
 			"refresh_token": rsc.APIToken,
 		}
@@ -771,9 +781,9 @@ func (rsc *client) GetUser() (user map[string]interface{}, err error) {
 			err = fmt.Errorf("Couldn't retrieve information of user from credentials")
 			return nil, err
 		}
-		rsc.user = getUserInfo(rsc.rs, ui)
+		rsc.user, err = getUserInfo(rsc.rs, ui)
 	}
-	return rsc.user, nil
+	return rsc.user, err
 }
 
 // API returns the low level RightScale API. This is not exposed by the public
@@ -966,19 +976,19 @@ func analyzeSource(source string) (expectsOutputs bool, err error) {
 func getCurrentUserID(rs *rsapi.API) string {
 	req, err := rs.BuildHTTPRequest("GET", "/api/sessions", "1.5", rsapi.APIParams{"view": "whoami"}, nil)
 	if err != nil {
-		panic(err)
+		return ""
 	}
 
 	resp, err := performRequestWithRetries(rs, req)
 	if err != nil {
-		panic(err)
+		return ""
 	}
 	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
+		return ""
 	}
 	ms, err := rs.LoadResponse(resp)
 	if err != nil {
-		panic(err)
+		return ""
 	}
 	links := ms.(map[string]interface{})["links"]
 	for _, el := range links.([]interface{}) {
@@ -1000,24 +1010,24 @@ func getCurrentUserID(rs *rsapi.API) string {
 }
 
 // retrieves user information providing the user ID via /api/users/<ID>
-func getUserInfo(rs *rsapi.API, uid string) map[string]interface{} {
+func getUserInfo(rs *rsapi.API, uid string) (map[string]interface{}, error) {
 	req, err := rs.BuildHTTPRequest("GET", fmt.Sprintf("/api/users/%s", uid), "1.5", nil, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	resp, err := performRequestWithRetries(rs, req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Errorf("failed to retrieve user: index returned %q", resp.Status))
+		return nil, fmt.Errorf("failed to retrieve user: index returned %q", resp.Status)
 	}
 	ms, err := rs.LoadResponse(resp)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return ms.(map[string]interface{})
+	return ms.(map[string]interface{}), nil
 }
 
 // generates a string from the user's map[string]interface{}
